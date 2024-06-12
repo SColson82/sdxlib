@@ -2,6 +2,13 @@ import unittest
 from unittest.mock import patch
 from sdxlib.client import SDXClient, SDXException
 
+'''
+Unit tests for the sdxlib library
+
+Run from the SDXLIB parent directory Using: 
+    python -m unittest discover tests
+'''
+
 class TestSDXClient(unittest.TestCase):
 
     @patch('sdxlib.client.requests.post')
