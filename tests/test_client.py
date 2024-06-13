@@ -2,11 +2,12 @@ import unittest
 from unittest.mock import patch
 from sdxlib.client import SDXClient, SDXException
 
+
 '''
 Unit tests for the sdxlib library
 
 Run from the SDXLIB parent directory Using: 
-    python -m unittest discover tests
+    python -m unittest discover -v tests
 '''
 
 class TestSDXClient(unittest.TestCase):
@@ -19,7 +20,7 @@ class TestSDXClient(unittest.TestCase):
         client = SDXClient(base_url="http://example.com")
         
         response = client.create_l2vpn(
-            name=" Test L2VPN",
+            name="Test L2VPN",
             endpoints=[{"interface_uri": "urn:sdx:port:test:1", "vlan": "100"}]
         )
 
@@ -39,7 +40,7 @@ class TestSDXClient(unittest.TestCase):
                 endpoints=[{"interface_uri": "urn:sdx:port:test:1", 
                 "vlan": "100"}]
             )
-        self.assertEqual(context.exception.status_code, )
+        self.assertEqual(context.exception.status_code, 400)
         self.assertEqual(context.exception.message, "Bad Request")
 
 if __name__=="__main__":
