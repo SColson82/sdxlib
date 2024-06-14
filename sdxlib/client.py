@@ -79,11 +79,18 @@ class SDXClient:
 
         Raises:
         - TypeError: If the provided endpoints are not a list.
+        - ValueError: If the endpoints list has less than 2 entries or contains non-dictionary elements.
         """
-        if isinstance(value, list):
-            self._endpoints = value
-        else:
+        if not isinstance(value, list):
             raise TypeError("Endpoints must be a list.")
+        
+        if not all(isinstance(item, dict) for item in value):
+            raise TypeError("Endpoints must be a list of dictionaries.")
+        
+        if len(value) < 2:
+            raise ValueError("Endpoints must contain at least 2 entries.")
+        
+        self._endpoints = value
 
     def create_l2vpn(self):
         """
@@ -136,7 +143,10 @@ if __name__=="__main__":
     # Example usage
     client = SDXClient(base_url="http://example.com")
     client.name = "Test L2VPN"
-    client.endpoints = [{"port_id": "urn:sdx:port:test:1", "vlan": "100"}]
+    client.endpoints = [
+        {"port_id": "urn:sdx:port:test:1", "vlan": "100"},
+        {"port_id": "urn:sdx:port:test:1", "vlan": "200"}
+    ]
 
     try:
         response = client.create_l2vpn()
