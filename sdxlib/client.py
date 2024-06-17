@@ -82,8 +82,13 @@ class SDXClient:
         - value (list): The list of endpoints to be set.
 
         Raises:
-        - TypeError: If the provided endpoints are not a list.
-        - ValueError: If the endpoints list has less than 2 entries or contains non-dictionary elements.
+        - TypeError: 
+            - If the provided endpoints are not a list.
+            - If the endpoints list contains non-dictionary elements.
+        - ValueError: 
+            - If the endpoints list has less than 2 entries.
+            - If any endpoint dictionary does not contain a non-empty 'port_id' key.
+            - If any endpoint dictionary does not contain a non-empty 'vlan' key.
         """
         if not isinstance(value, list):
             raise TypeError("Endpoints must be a list.")
@@ -93,6 +98,13 @@ class SDXClient:
         
         if len(value) < 2:
             raise ValueError("Endpoints must contain at least 2 entries.")
+        
+        for endpoint in value:
+            if 'port_id' not in endpoint or not endpoint['port_id']:
+                raise ValueError("Each endpoint must contain a non-empty 'port_id' key.")
+            if 'vlan' not in endpoint or not endpoint['vlan']:
+                raise ValueError("Each endpoint must contain a non-empty 'vlan' key.")
+
         
         self._endpoints = value
 
