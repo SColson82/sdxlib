@@ -50,11 +50,13 @@ class SDXClient:
 
         Raises:
         - TypeError: If the provided name is not a string.
+        - ValueError: If the provided name exceeds 50 characters.
         """
-        if isinstance(value, str):
-            self._name = value
-        else:
+        if not isinstance(value, str):
             raise TypeError("Name must be a string.")
+        if len(value) > 50:
+            raise ValueError("Name must be 50 characters or fewer.")
+        self._name = value
         
     @property
     def endpoints(self):
@@ -103,10 +105,9 @@ class SDXClient:
         - ValueError: If name or endpoints are not provided or do not meet requirements.
         - SDXException: If the API request fails.
         """
+
         if self.name is None:
             raise ValueError("Name is required.")
-        if len(self.name) > 50:
-            raise ValueError("Name must be 50 characters or fewer.")
         if not self.endpoints:
             raise ValueError("Endpoints must not be empty.")
         

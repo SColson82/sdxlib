@@ -48,16 +48,11 @@ class TestSDXClient(unittest.TestCase):
 
     @patch('sdxlib.client.requests.post')
     def test_create_l2vpn_name_length_exceeds_limit(self, mock_post):
-        """Checks that the 'create_l2vpn' method correctly raises a 'ValueError' when the 'name' exceeds 50 characters. """
+        """Checks that the 'name' setter correctly raises a 'ValueError' when the 'name' exceeds 50 characters. """
         client = SDXClient(base_url="http://example.com")
-        client.name="This is a very long name that exceeds 50 chatacters limit"
-        client.endpoints=[
-            {"port_id": "urn:sdx:port:test:1", "vlan": "100"},
-            {"port_id": "urn:sdx:port:test:1", "vlan": "200"}
-        ]
 
         with self.assertRaises(ValueError) as context:
-            client.create_l2vpn()
+            client.name="This is a very long name that exceeds 50 chatacters limit"
 
         self.assertEqual(str(context.exception), "Name must be 50 characters or fewer.")
 
