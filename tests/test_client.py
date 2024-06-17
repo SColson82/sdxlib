@@ -56,6 +56,16 @@ class TestSDXClient(unittest.TestCase):
 
         self.assertEqual(str(context.exception), "Name must be 50 characters or fewer.")
 
+    @patch('sdxlib.client.requests.post')
+    def test_create_l2vpn_name_empty_string(self, mock_post):
+        """Checks that the 'name' setter correctlys raises a 'ValueError' when the name is an empty string."""
+        client = SDXClient(base_url="http://example.com")
+
+        with self.assertRaises(ValueError) as context:
+            client.name = ""
+
+        self.assertEqual(str(context.exception), "Name cannot be an empty string.")
+
     #### Endpoint Attribute ####
     @patch('sdxlib.client.requests.post')
     def test_create_l2vpn_endpoints_required(self, mock_post):
