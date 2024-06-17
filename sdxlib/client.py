@@ -50,12 +50,14 @@ class SDXClient:
 
         Raises:
         - TypeError: If the provided name is not a string.
-        - ValueError: If the provided name exceeds 50 characters.
+        - ValueError: If the provided name exceeds 50 characters or is an empty string.
         """
         if not isinstance(value, str):
             raise TypeError("Name must be a string.")
         if len(value) > 50:
             raise ValueError("Name must be 50 characters or fewer.")
+        if value == "":
+            raise ValueError("Name cannot be an empty string.")
         self._name = value
         
     @property
