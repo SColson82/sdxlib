@@ -62,8 +62,8 @@ class TestSDXClient(unittest.TestCase):
         self.assertEqual(context.exception.message, "Internal Server Error")
         mock_post.assert_called_once()
 
-    #### Edge Cases for Name ####
-    def test_name_not_set(self):
+    #### Edge Case Tests for Name ####
+    def test_create_l2vpn_name_required(self):
         """Checks that 'name' is provided."""
         client = SDXClient(base_url="http://example.com")
         client.endpoints=[
@@ -95,128 +95,100 @@ class TestSDXClient(unittest.TestCase):
             client.name = 123
         self.assertEqual(str(context.exception), "Name must be a string.")
 
-    #### Endpoint Attribute ####
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_required(self, mock_post):
+    #### Edge Case Tests for Endpoints ####
+    def test_create_l2vpn_endpoints_required(self):
         """Checks that the 'create_l2vpn' method correctly raises a 'ValueError' when the endpoints list is empty."""
         client = SDXClient(base_url="http://example.com")
         client.name = "Test L2VPN"
-
         with self.assertRaises(ValueError) as context:
             client.create_l2vpn()
-
         self.assertEqual(str(context.exception), "Endpoints must not be empty.")
 
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_min_required(self, mock_post):
-        """Checks that the 'endpoints' setter correctly raises 'ValueError' when the 'endpoints' contain less than 2 entries."""
-        
+    def test_endpoints_empty_list(self):
+        """Checks that an empty list is not allowed for the 'endpoints' attribute."""
+        client = SDXClient(base_url="http://example.com")
+        with self.assertRaises(ValueError) as context:
+            client.endpoints = []
+        self.assertEqual(str(context.exception), "Endpoints must contain at least 2 entries.")
+
+    def test_endpoints_min_required(self):
+        """Checks that a list with less than 2 endpoints is not allowed."""
         client = SDXClient(base_url="http://example.com")
         client.name="Test L2VPN"
-
         with self.assertRaises(ValueError) as context:
             client.endpoints=[
                 {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"}
             ]
-
         self.assertEqual(str(context.exception), "Endpoints must contain at least 2 entries.")
 
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_type_check(self, mock_post):
-        """Checks that the 'endpoints' setter raises 'TypeError' when 'endpoints' is not a list."""
+    def test_endpoints_list_check(self):
+        """Checks that non-list value is not allowed for the 'endpoints' attribute."""
         client = SDXClient(base_url="http://example.com")
         client.name="Test L2VPN"
-
-
         with self.assertRaises(TypeError) as context:
             client.endpoints = "invalid endpoints"
-
         self.assertEqual(str(context.exception), "Endpoints must be a list.")
 
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_list_of_dicts_check(self, mock_post):
-        """Checks that the 'endpoints' setter raises 'TypeError' when 'endpoints' contains non-dictionary elements."""
+    def test_endpoints_list_of_dicts_check(self):
+        """Checks that a list of non-dictionary elements is not allowed in the 'endpoints' attribute."""
         client = SDXClient(base_url="http://example.com")
         client.name="Test L2VPN"
-
         with self.assertRaises(TypeError) as context:
             client.endpoints=[
                 {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
                 "invalid endpoint"
             ]
-
         self.assertEqual(str(context.exception), "Endpoints must be a list of dictionaries.")
 
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_invalid_port_id(self, mock_post):
-        """Checks that the 'endpoints' setter raises 'ValueError' when 'port_id' has an invalid format."""
+    ### Edge Case Tests for Endpoints['port_id'] ###
+    def test_endpoints_missing_port_id(self):
+        """Checks that each endpoint contains a 'port_id' key. """
         client = SDXClient(base_url="http://example.com")
-        client.name = "Test L2VPN"
-
-        with self.assertRaises(ValueError) as context:
-            client.endpoints = [
-                {"port_id": "invalid-port_id", "vlan": "100"},
-                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan":"200"}
-            ]
-
-        self.assertEqual(str(context.exception), "Invalid port_id format: invalid-port_id")
-
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_missing_port_id(self, mock_post):
-        """Checks that the 'endpoints'setter raises 'ValueError' when any endpoint is missing the 'port_id' key. """
-        
-        client = SDXClient(base_url="http://example.com")
-        client.name="Test L2VPN"
-
         with self.assertRaises(ValueError) as context:
             client.endpoints=[
                 {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan":"100"},
                 {"vlan":"200"}
             ]
-
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'port_id' key.")
 
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_missing_vlan(self, mock_post):
-        """Checks that the 'endpoints'setter raises 'ValueError' when any endpoint is missing the 'vlan' key. """
-
+    def test_endpoints_empty_port_id(self):
+        """Checks that each endpoint's 'port_id' key cannot be empty."""
         client = SDXClient(base_url="http://example.com")
-        client.name="Test L2VPN"
-
-        with self.assertRaises(ValueError) as context:
-            client.endpoints=[
-                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan":"100"},
-                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name2"}
-            ]
-
-        self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
-
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_empty_port_id(self, mock_post):
-        """Checks that the 'endpoints' setter raises 'ValueError' when any 'port_id' key has a missing value."""
-        client = SDXClient(base_url="http://example.com")
-        client.name = "Test L2VPN"
-
         with self.assertRaises(ValueError) as context:
             client.endpoints = [
                 {"port_id": "", "vlan": "100"}, 
                 {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
             ]
-
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'port_id' key.")
 
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_endpoints_empty_vlan(self, mock_post):
-        """Checks that the 'endpoints' setter raises 'ValueError' when any 'vlan' key has a missing value."""
+    def test_endpoints_invalid_port_id_format(self):
+        """Checks that the 'port_id' key follows the required format."""
         client = SDXClient(base_url="http://example.com")
-        client.name = "Test L2VPN"
+        with self.assertRaises(ValueError) as context:
+            client.endpoints = [
+                {"port_id": "invalid-port_id", "vlan": "100"},
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan":"200"}
+            ]
+        self.assertEqual(str(context.exception), "Invalid port_id format: invalid-port_id")
 
+    def test_endpoints_missing_vlan(self):
+        """Checks that each endpoint contains a 'vlan' key."""
+        client = SDXClient(base_url="http://example.com")
+        with self.assertRaises(ValueError) as context:
+            client.endpoints=[
+                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan":"100"},
+                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name2"}
+            ]
+        self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
+
+    def test_endpoints_empty_vlan(self):
+        """Checks that each endpoint's 'vlan' key cannot be empty."""
+        client = SDXClient(base_url="http://example.com")
         with self.assertRaises(ValueError) as context:
             client.endpoints = [
                 {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": ""},
                 {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
             ]
-
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
 
 if __name__=="__main__":
