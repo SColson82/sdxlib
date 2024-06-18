@@ -62,40 +62,38 @@ class TestSDXClient(unittest.TestCase):
         self.assertEqual(context.exception.message, "Internal Server Error")
         mock_post.assert_called_once()
 
-    #### Name Attribute ####
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_name_required(self, mock_post):
-        """Checks that the 'create_l2vpn' method correctly raises a 'ValueError' when the 'name' is not provided (empty string)."""
+    #### Edge Cases for Name ####
+    def test_name_not_set(self):
+        """Checks that 'name' is provided."""
         client = SDXClient(base_url="http://example.com")
         client.endpoints=[
             {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
             {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
         ]
-
         with self.assertRaises(ValueError) as context:
             client.create_l2vpn()
-
         self.assertEqual(str(context.exception), "Name is required.")
 
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_name_length_exceeds_limit(self, mock_post):
-        """Checks that the 'name' setter correctly raises a 'ValueError' when the 'name' exceeds 50 characters. """
+    def test_name_empty_string(self):
+        """Checks that empty string is not allowed for 'name' attribute."""
         client = SDXClient(base_url="http://example.com")
-
-        with self.assertRaises(ValueError) as context:
-            client.name="This is a very long name that exceeds 50 chatacters limit"
-
-        self.assertEqual(str(context.exception), "Name must be 50 characters or fewer.")
-
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_name_empty_string(self, mock_post):
-        """Checks that the 'name' setter correctlys raises a 'ValueError' when the name is an empty string."""
-        client = SDXClient(base_url="http://example.com")
-
         with self.assertRaises(ValueError) as context:
             client.name = ""
-
         self.assertEqual(str(context.exception), "Name cannot be an empty string.")
+
+    def test_name_too_long(self):
+        """Checks that the 'name' exceeding 50 characters is not allowed."""
+        client = SDXClient(base_url="http://example.com")
+        with self.assertRaises(ValueError) as context:
+            client.name="This is a very long name that exceeds 50 chatacters limit"
+        self.assertEqual(str(context.exception), "Name must be 50 characters or fewer.")
+
+    def test_name_non_string(self):
+        """Checks that a non-string value is not allowed for the 'name' attribute."""
+        client = SDXClient(base_url="http://example.com")
+        with self.assertRaises(TypeError) as context:
+            client.name = 123
+        self.assertEqual(str(context.exception), "Name must be a string.")
 
     #### Endpoint Attribute ####
     @patch('sdxlib.client.requests.post')
