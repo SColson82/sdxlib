@@ -97,12 +97,20 @@ class TestSDXClient(unittest.TestCase):
 
     #### Edge Case Tests for Endpoints ####
     def test_create_l2vpn_endpoints_required(self):
-        """Checks that the 'create_l2vpn' method correctly raises a 'ValueError' when the endpoints list is empty."""
+        """Checks that the 'create_l2vpn' method correctly raises a 'ValueError' when the endpoints does not exist."""
         client = SDXClient(base_url="http://example.com")
         client.name = "Test L2VPN"
         with self.assertRaises(ValueError) as context:
             client.create_l2vpn()
         self.assertEqual(str(context.exception), "Endpoints must not be empty.")
+
+    def test_endpoints_list_check(self):
+        """Checks that non-list value is not allowed for the 'endpoints' attribute."""
+        client = SDXClient(base_url="http://example.com")
+        client.name="Test L2VPN"
+        with self.assertRaises(TypeError) as context:
+            client.endpoints = "invalid endpoints"
+        self.assertEqual(str(context.exception), "Endpoints must be a list.")
 
     def test_endpoints_empty_list(self):
         """Checks that an empty list is not allowed for the 'endpoints' attribute."""
@@ -120,14 +128,6 @@ class TestSDXClient(unittest.TestCase):
                 {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"}
             ]
         self.assertEqual(str(context.exception), "Endpoints must contain at least 2 entries.")
-
-    def test_endpoints_list_check(self):
-        """Checks that non-list value is not allowed for the 'endpoints' attribute."""
-        client = SDXClient(base_url="http://example.com")
-        client.name="Test L2VPN"
-        with self.assertRaises(TypeError) as context:
-            client.endpoints = "invalid endpoints"
-        self.assertEqual(str(context.exception), "Endpoints must be a list.")
 
     def test_endpoints_list_of_dicts_check(self):
         """Checks that a list of non-dictionary elements is not allowed in the 'endpoints' attribute."""
@@ -171,6 +171,7 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(str(context.exception), "Invalid port_id format: invalid-port_id")
 
+    ### Edge Case Tests for Endpoints['vlan'] ###
     def test_endpoints_missing_vlan(self):
         """Checks that each endpoint contains a 'vlan' key."""
         client = SDXClient(base_url="http://example.com")
@@ -191,7 +192,7 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
 
-    #### Success Tests ####
+    #### Additional Success Tests ####
     def test_valid_name(self):
         """Checks that a valid name is accepted."""
         client = SDXClient(base_url="http://example.com")
