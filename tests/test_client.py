@@ -29,6 +29,38 @@ class TestSDXClient(unittest.TestCase):
         response = client.create_l2vpn()
 
         self.assertEqual(response, {"status": "Accepted"})
+        mock_post.assert_called_once_with(
+            "http://example.com/l2vpn",
+            json={
+                "name": "Test L2VPN",
+                "endpoints": [
+                    {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
+                    {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
+                ]
+            }
+        )
+
+    #### API Call Fails ####
+    @patch('sdxlib.client.requests.post')
+    def test_create_l2vpn_api_failure(self, mock_post):
+        """Checks that the 'create_l2vpn' method raises and 'SDXException on API failure."""
+        mock_post.return_value.ok = False
+        mock_post.return_value.status_code = 500
+        mock_post.return_value.text = "Internal Server Error"
+
+        client = SDXClient(base_url="http://example.com")
+        client.name="Test L2VPN"
+        client.endpoints=[
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
+        ]
+
+        with self.assertRaises(SDXException) as context:
+            client.create_l2vpn()
+
+        self.assertEqual(context.exception.status_code, 500)
+        self.assertEqual(context.exception.message, "Internal Server Error")
+        mock_post.assert_called_once()
 
     #### Name Attribute ####
     @patch('sdxlib.client.requests.post')
@@ -188,27 +220,6 @@ class TestSDXClient(unittest.TestCase):
             ]
 
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
-
-    #### API Call Fails ####
-    @patch('sdxlib.client.requests.post')
-    def test_create_l2vpn_failure(self, mock_post):
-        """Checks that the 'create_l2vpn' method correctly handles a failure scenario where the API call returns an error response."""
-        mock_post.return_value.ok = False
-        mock_post.return_value.status_code = 400
-        mock_post.return_value.text = "Bad Request"
-
-        client = SDXClient(base_url="http://example.com")
-        client.name="Test L2VPN"
-        client.endpoints=[
-                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
-                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
-        ]
-
-        with self.assertRaises(SDXException) as context:
-            client.create_l2vpn()
-
-        self.assertEqual(context.exception.status_code, 400)
-        self.assertEqual(context.exception.message, "Bad Request")
 
 if __name__=="__main__":
     unittest.main()
