@@ -1,3 +1,4 @@
+import re
 import requests
 
 """
@@ -8,6 +9,9 @@ A Python client library for interacting with the AtlanticWave-SDX L2VPN API.
 """
 
 class SDXClient:
+
+    PORT_ID_PATTERN = r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
+
     def __init__(self, base_url):
         """
         Initializes an instance of SDXClient.
@@ -17,7 +21,7 @@ class SDXClient:
 
         Attributes:
         - base_url (str): The base URL of the SDX API.
-        - _name (str of None): Private attribute for storing the name of the L2VPN.
+        - _name (str): Private attribute for storing the name of the L2VPN.
         - _endpoints (list): Private attribute for storing the list of endpoints.
 
         Raises:
@@ -33,7 +37,7 @@ class SDXClient:
         Getter method for retrieving the name of the L2VPN.
 
         Returns:
-        - str or None: The name of the L2VPN.
+        - str: The name of the L2VPN.
 
         Raises:
         - None
@@ -89,6 +93,7 @@ class SDXClient:
             - If the endpoints list has less than 2 entries.
             - If any endpoint dictionary does not contain a non-empty 'port_id' key.
             - If any endpoint dictionary does not contain a non-empty 'vlan' key.
+            - If the port_id value does not follow the format: 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>'
         """
         if not isinstance(value, list):
             raise TypeError("Endpoints must be a list.")
@@ -102,6 +107,8 @@ class SDXClient:
         for endpoint in value:
             if 'port_id' not in endpoint or not endpoint['port_id']:
                 raise ValueError("Each endpoint must contain a non-empty 'port_id' key.")
+            if not re.match(self.PORT_ID_PATTERN, endpoint['port_id']):
+                raise ValueError(f"Invalid port_id format: {endpoint['port_id']}")
             if 'vlan' not in endpoint or not endpoint['vlan']:
                 raise ValueError("Each endpoint must contain a non-empty 'vlan' key.")
 
@@ -159,8 +166,8 @@ if __name__=="__main__":
     client = SDXClient(base_url="http://example.com")
     client.name = "Test L2VPN"
     client.endpoints = [
-        {"port_id": "urn:sdx:port:test:1", "vlan": "100"},
-        {"port_id": "urn:sdx:port:test:1", "vlan": "200"}
+        {"port_id": "test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
+        {"port_id": "test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
     ]
 
     try:
