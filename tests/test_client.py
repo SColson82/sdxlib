@@ -191,5 +191,22 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
 
+    #### Success Tests ####
+    def test_valid_name(self):
+        """Checks that a valid name is accepted."""
+        client = SDXClient(base_url="http://example.com")
+        client.name = "Test L2VPN"
+        self.assertEqual(client.name, "Test L2VPN")
+
+    def test_valid_endpoints(self):
+        """Checks that valid endpoints are accepted."""
+        client = SDXClient(base_url="http://example.com")
+        valid_endpoints = [
+            {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
+            {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
+        ]
+        client.endpoints = valid_endpoints
+        self.assertEqual(client.endpoints, valid_endpoints)
+
 if __name__=="__main__":
     unittest.main()
