@@ -13,7 +13,6 @@ Run from the SDXLIB parent directory Using:
 class TestSDXClient(unittest.TestCase):
 
     #### API Call Succeeds ####
-    # @patch ensures that the tests do not actually perform HTTP requests but instead test the behavior of the 'SDXClient'
     @patch('sdxlib.client.requests.post')
     def test_create_l2vpn_success(self, mock_post):
         """Checks that the 'create_l2vpn' method correctly handles a successful API call."""
@@ -23,8 +22,8 @@ class TestSDXClient(unittest.TestCase):
         client = SDXClient(base_url="http://example.com")
         client.name = "Test L2VPN"
         client.endpoints=[
-            {"port_id": "urn:sdx:port:test:1", "vlan": "100"},
-            {"port_id": "urn:sdx:port:test:1", "vlan": "200"}
+            {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
+            {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
         ]
         
         response = client.create_l2vpn()
@@ -37,8 +36,8 @@ class TestSDXClient(unittest.TestCase):
         """Checks that the 'create_l2vpn' method correctly raises a 'ValueError' when the 'name' is not provided (empty string)."""
         client = SDXClient(base_url="http://example.com")
         client.endpoints=[
-            {"port_id": "urn:sdx:port:test:1", "vlan": "100"},
-            {"port_id": "urn:sdx:port:test:1", "vlan": "200"}
+            {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
+            {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
         ]
 
         with self.assertRaises(ValueError) as context:
@@ -87,7 +86,7 @@ class TestSDXClient(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             client.endpoints=[
-                {"port_id":"urn:sdx:port:test:1", "vlan": "100"}
+                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"}
             ]
 
         self.assertEqual(str(context.exception), "Endpoints must contain at least 2 entries.")
@@ -112,11 +111,25 @@ class TestSDXClient(unittest.TestCase):
 
         with self.assertRaises(TypeError) as context:
             client.endpoints=[
-                {"port_id":"urn:sdx:port:test:1", "vlan": "100"},
+                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
                 "invalid endpoint"
             ]
 
         self.assertEqual(str(context.exception), "Endpoints must be a list of dictionaries.")
+
+    @patch('sdxlib.client.requests.post')
+    def test_create_l2vpn_endpoints_invalid_port_id(self, mock_post):
+        """Checks that the 'endpoints' setter raises 'ValueError' when 'port_id' has an invalid format."""
+        client = SDXClient(base_url="http://example.com")
+        client.name = "Test L2VPN"
+
+        with self.assertRaises(ValueError) as context:
+            client.endpoints = [
+                {"port_id": "invalid-port_id", "vlan": "100"},
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan":"200"}
+            ]
+
+        self.assertEqual(str(context.exception), "Invalid port_id format: invalid-port_id")
 
     @patch('sdxlib.client.requests.post')
     def test_create_l2vpn_endpoints_missing_port_id(self, mock_post):
@@ -127,7 +140,7 @@ class TestSDXClient(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             client.endpoints=[
-                {"port_id":"urn:sdx:port:test:1", "vlan":"100"},
+                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan":"100"},
                 {"vlan":"200"}
             ]
 
@@ -142,8 +155,8 @@ class TestSDXClient(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             client.endpoints=[
-                {"port_id":"urn:sdx:port:test:1", "vlan":"100"},
-                {"port_id":"urn:sdx:port:test:2"}
+                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan":"100"},
+                {"port_id":"urn:sdx:port:test-oxp_url:test-node_name:test-port_name2"}
             ]
 
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
@@ -157,7 +170,7 @@ class TestSDXClient(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             client.endpoints = [
                 {"port_id": "", "vlan": "100"}, 
-                {"port_id": "urn:sdx:port:test:2", "vlan": "200"}
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
             ]
 
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'port_id' key.")
@@ -170,8 +183,8 @@ class TestSDXClient(unittest.TestCase):
 
         with self.assertRaises(ValueError) as context:
             client.endpoints = [
-                {"port_id": "urn:sdx:port:test:1", "vlan": ""},
-                {"port_id": "urn:sdx:port:test:2", "vlan": "200"}
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": ""},
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
             ]
 
         self.assertEqual(str(context.exception), "Each endpoint must contain a non-empty 'vlan' key.")
@@ -187,8 +200,8 @@ class TestSDXClient(unittest.TestCase):
         client = SDXClient(base_url="http://example.com")
         client.name="Test L2VPN"
         client.endpoints=[
-                {"port_id": "urn:sdx:port:test:1", "vlan": "100"},
-                {"port_id": "urn:sdx:port:test:1", "vlan": "200"}
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
+                {"port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
         ]
 
         with self.assertRaises(SDXException) as context:
