@@ -145,6 +145,12 @@ class SDXClient:
         else:
             raise SDXException(status_code=response.status_code, message=response.text)
     
+    def __str__(self):
+        return f"SDXClient(name={self.name}, endpoints={self.endpoints})"
+
+    def __repr__(self):
+        return f"SDXClient(base_url={self.base_url}, name={self.name}, endpoints={self.endpoints})"
+
 class SDXException(Exception):
     def __init__(self, status_code, message):
         """
