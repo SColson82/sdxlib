@@ -5,12 +5,17 @@ import requests
 sdxlib
 
 A Python client library for interacting with the AtlanticWave-SDX L2VPN API.
-
 """
+
 
 class SDXClient:
 
-    PORT_ID_PATTERN = r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
+    PORT_ID_PATTERN = (
+        r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
+    )
+    # VLAN_PATTERN = re.compile(
+    #     r'^(?:any|untagged|all|[1-9]\d{0,3}|(?:[1-9]\d{0,3}:\d{1,4}))$'
+    # )
 
     def __init__(self, base_url):
         """
@@ -43,7 +48,7 @@ class SDXClient:
         - None
         """
         return self._name
-    
+
     @name.setter
     def name(self, value):
         """
@@ -63,7 +68,7 @@ class SDXClient:
         if value == "":
             raise ValueError("Name cannot be an empty string.")
         self._name = value
-        
+
     @property
     def endpoints(self):
         """
@@ -76,7 +81,7 @@ class SDXClient:
         - None
         """
         return self._endpoints
-    
+
     @endpoints.setter
     def endpoints(self, value):
         """
@@ -86,10 +91,10 @@ class SDXClient:
         - value (list): The list of endpoints to be set.
 
         Raises:
-        - TypeError: 
+        - TypeError:
             - If the provided endpoints are not a list.
             - If the endpoints list contains non-dictionary elements.
-        - ValueError: 
+        - ValueError:
             - If the endpoints list has less than 2 entries.
             - If any endpoint dictionary does not contain a non-empty 'port_id' key.
             - If any endpoint dictionary does not contain a non-empty 'vlan' key.
@@ -97,22 +102,75 @@ class SDXClient:
         """
         if not isinstance(value, list):
             raise TypeError("Endpoints must be a list.")
-        
+
         if not all(isinstance(item, dict) for item in value):
             raise TypeError("Endpoints must be a list of dictionaries.")
-        
+
         if len(value) < 2:
             raise ValueError("Endpoints must contain at least 2 entries.")
-        
+
+        vlans = set()
+        vlan_ranges = set()
+        has_vlan_range = False
+        # endpoints_with_vlan_range = 0
+
         for endpoint in value:
-            if 'port_id' not in endpoint or not endpoint['port_id']:
-                raise ValueError("Each endpoint must contain a non-empty 'port_id' key.")
-            if not re.match(self.PORT_ID_PATTERN, endpoint['port_id']):
+            if "port_id" not in endpoint or not endpoint["port_id"]:
+                raise ValueError(
+                    "Each endpoint must contain a non-empty 'port_id' key."
+                )
+
+            if not re.match(self.PORT_ID_PATTERN, endpoint["port_id"]):
                 raise ValueError(f"Invalid port_id format: {endpoint['port_id']}")
-            if 'vlan' not in endpoint or not endpoint['vlan']:
+
+            if "vlan" not in endpoint or not endpoint["vlan"]:
                 raise ValueError("Each endpoint must contain a non-empty 'vlan' key.")
 
-        
+            vlan_value = endpoint["vlan"]
+
+            if not isinstance(vlan_value, str):
+                raise TypeError("VLAN must be a string.")
+
+            if vlan_value in {"any", "all", "untagged"}:
+                vlans.add(vlan_value)
+            else:
+                if vlan_value.isdigit():
+                    if not (1 <= int(vlan_value) <= 4095):
+                        raise ValueError(
+                            f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
+                        )
+                elif ":" in vlan_value:
+                    vlan_range = vlan_value.split(":")
+                    if len(vlan_range) == 2:
+                        vlan_id1, vlan_id2 = map(int, vlan_range)
+                        if not (1 <= vlan_id1 < vlan_id2 <= 4095):
+                            raise ValueError(
+                                f"Invalid VLAN range values: '{vlan_value}'. Must be between 1 and 4095, and VLAN ID1 must be less than VLAN ID2."
+                            )
+                        if vlan_value not in vlan_ranges:
+                            vlan_ranges.add(vlan_value)
+                        has_vlan_range = True
+                        # endpoints_with_vlan_range += 1
+                    else:
+                        raise ValueError(
+                            f"Invalid VLAN range format: '{vlan_value}'. Must be 'VLAN ID1:VLAN ID2'."
+                        )
+                else:
+                    raise ValueError(
+                        f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
+                    )
+
+        if has_vlan_range and len(vlan_range) > 1:
+            # if len(vlan_range) > 1:
+            raise ValueError(
+                "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
+            )
+
+        if "all" in vlans and len(vlans) > 1:
+            raise ValueError(
+                "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
+            )
+
         self._endpoints = value
 
     def create_l2vpn(self):
@@ -128,15 +186,18 @@ class SDXClient:
         """
 
         if self.name is None:
-            raise ValueError("Name is required.")
+            raise ValueError("Name attribute is required.")
         if not self.endpoints:
-            raise ValueError("Endpoints must not be empty.")
-        
+            raise ValueError("Endpoints attribute is required.")
+
         url = f"{self.base_url}/l2vpn"
 
         payload = {
             "name": self.name,
-            "endpoints": [{"port_id": endpoint["port_id"], "vlan": endpoint["vlan"]} for endpoint in self.endpoints]
+            "endpoints": [
+                {"port_id": endpoint["port_id"], "vlan": endpoint["vlan"]}
+                for endpoint in self.endpoints
+            ],
         }
         response = requests.post(url, json=payload)
 
@@ -144,12 +205,13 @@ class SDXClient:
             return response.json()
         else:
             raise SDXException(status_code=response.status_code, message=response.text)
-    
+
     def __str__(self):
         return f"SDXClient(name={self.name}, endpoints={self.endpoints})"
 
     def __repr__(self):
         return f"SDXClient(base_url={self.base_url}, name={self.name}, endpoints={self.endpoints})"
+
 
 class SDXException(Exception):
     def __init__(self, status_code, message):
@@ -167,13 +229,20 @@ class SDXException(Exception):
         self.status_code = status_code
         self.message = message
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     # Example usage
     client = SDXClient(base_url="http://example.com")
     client.name = "Test L2VPN"
     client.endpoints = [
-        {"port_id": "test-oxp_url:test-node_name:test-port_name", "vlan": "100"},
-        {"port_id": "test-oxp_url:test-node_name:test-port_name2", "vlan": "200"}
+        {
+            "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
+            "vlan": "100",
+        },
+        {
+            "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
+            "vlan": "200",
+        },
     ]
 
     try:
