@@ -84,7 +84,7 @@ class TestSDXClient(unittest.TestCase):
         self.assertEqual(context.exception.message, "Internal Server Error")
         mock_post.assert_called_once()
 
-    # Edge Case Tests for Name #
+    # Unit Tests for Name Attribute#
     def test_create_l2vpn_name_required(self):
         """Checks that 'name' is provided."""
         client = SDXClient(base_url="http://example.com")
@@ -123,7 +123,7 @@ class TestSDXClient(unittest.TestCase):
             client.name = 123
         self.assertEqual(str(context.exception), "Name must be a string.")
 
-    # Edge Case Tests for Endpoints #
+    # Unit Tests for Endpoints Attribute#
     def test_create_l2vpn_endpoints_required(self):
         """Checks that 'endpoints' is provided."""
         client = SDXClient(base_url="http://example.com")
@@ -180,7 +180,7 @@ class TestSDXClient(unittest.TestCase):
             str(context.exception), "Endpoints must be a list of dictionaries."
         )
 
-    # Edge Case Tests for Port ID #
+    # Unit Tests for Endpoints[Port ID] Attribute #
     def test_endpoints_missing_port_id(self):
         """Checks that each endpoint contains a 'port_id' key."""
         client = SDXClient(base_url="http://example.com")
@@ -228,7 +228,7 @@ class TestSDXClient(unittest.TestCase):
             str(context.exception), "Invalid port_id format: invalid-port_id"
         )
 
-    # Edge Case Tests for VLAN #
+    # Unit Tests for Endpoints[VLAN] Attribute #
     def test_endpoints_missing_vlan_key(self):
         """Checks that each endpoint contains a 'vlan' key."""
         client = SDXClient(base_url="http://example.com")
@@ -916,6 +916,38 @@ class TestSDXClient(unittest.TestCase):
         self.assertEqual(
             str(context.exception),
             "Invalid VLAN value: 'invalid_vlan'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range.",
+        )
+
+    # Unit Tests for Description Attribute(Optional) #
+    def test_set_valid_description(self):
+        """Test setting a valid 'description' value of string."""
+        client = SDXClient(base_url="http://example.com")
+        valid_description = "This is a valid description."
+        client.description = valid_description
+        self.assertEqual(client.description, valid_description)
+
+    def test_set_valid_description_url(self):
+        """Test setting a valid 'description' value of URL."""
+        client = SDXClient(base_url="http://example.com")
+        valid_description = "https://example.com/info"
+        client.description = valid_description
+        self.assertEqual(client.description, valid_description)
+
+    def test_set_description_none(self):
+        """Test setting the description to None."""
+        client = SDXClient(base_url="http://example.com")
+        client.description = None
+        self.assertIsNone(client.description)
+
+    def test_set_description_exceeding_limit(self):
+        """Test setting description exceeding 255-character limit will raise ValueError"""
+        client = SDXClient(base_url="http://example.com")
+        long_description = "x" * 256
+        with self.assertRaises(ValueError) as context:
+            client.description = long_description
+        self.assertEqual(
+            str(context.exception),
+            "Description attribute must be less than 256 characters.",
         )
 
     # Additional Success Tests #
