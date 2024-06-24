@@ -9,6 +9,18 @@ A Python client library for interacting with the AtlanticWave-SDX L2VPN API.
 
 
 class SDXClient:
+    """
+    A client class for managing interactions with the AtlanticWave-SDX L2VPN API.
+
+    Attributes:
+    - base_url (str): The base URL of the SDX API.
+    - _name (str): Private attribute for storing the name of the L2VPN.
+    - _endpoints (list): Private attribute for storing the list of endpoints.
+
+    Raises:
+    - ValueError: If provided parameters do not meet requirements.
+    - SDXException: If an API request fails.
+    """
 
     PORT_ID_PATTERN = (
         r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
@@ -20,14 +32,6 @@ class SDXClient:
 
         Args:
         - base_url (str): The base URL of the SDX API.
-
-        Attributes:
-        - base_url (str): The base URL of the SDX API.
-        - _name (str): Private attribute for storing the name of the L2VPN.
-        - _endpoints (list): Private attribute for storing the list of endpoints.
-
-        Raises:
-        - None
         """
         self.base_url = base_url
         self._name = None
@@ -91,11 +95,17 @@ class SDXClient:
         - TypeError:
             - If the provided endpoints are not a list.
             - If the endpoints list contains non-dictionary elements.
+            - If the VLAN value is not a string.
         - ValueError:
             - If the endpoints list has less than 2 entries.
             - If any endpoint dictionary does not contain a non-empty 'port_id' key.
-            - If any endpoint dictionary does not contain a non-empty 'vlan' key.
             - If the port_id value does not follow the format: 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>'
+            - If any endpoint dictionary does not contain a non-empty 'vlan' key.
+            - If any vlan value is other than an integer string, a valid range format, or any of the values 'any', 'all', or 'untagged'.
+            - If the vlan value is an integer string that is not between 1 and 4095 inclusive.
+            - If the vlan value 'all' is used with any other value but 'all'.
+            - If a range is used for the vlan value with any other value but the same range value.
+            - If the vlan range value does not follow the format 'VLAN ID 1:VLAN ID2' where 1 <= VLAN ID1 < VLAN ID2 <= 4095.
         """
         if not isinstance(value, list):
             raise TypeError("Endpoints must be a list.")
@@ -174,7 +184,6 @@ class SDXClient:
                 "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
             )
 
-        # if "all" in vlans and len(vlans) > 1:
         if has_special_vlan and (len(vlans) > 1 or has_single_vlan or has_vlan_range):
             raise ValueError(
                 "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
@@ -216,16 +225,39 @@ class SDXClient:
             raise SDXException(status_code=response.status_code, message=response.text)
 
     def __str__(self):
+        """
+        Returns a string representation of the SDXClient object.
+
+        Returns:
+        - str: String representation of the object.
+        """
         return f"SDXClient(name={self.name}, endpoints={self.endpoints})"
 
     def __repr__(self):
+        """
+        Returns a detailed string representation of teh SDXClient object.
+
+        Returns:
+        - str: Detailed string representation of the object.
+        """
         return f"SDXClient(base_url={self.base_url}, name={self.name}, endpoints={self.endpoints})"
 
 
 class SDXException(Exception):
+    """
+    Custom exception class for SDXClient API errors.
+
+    Attributes:
+    - status_code (int): HTTP status code associated with the error.
+    - message (str): Error message detailing the exception.
+
+    Raises:
+    - None
+    """
+
     def __init__(self, status_code, message):
         """
-        Initializes an SDXException with status code and message.
+        Initialized an SDXException with status code and message.
 
         Args:
         - status_code (int): HTTP status code.
