@@ -10,7 +10,8 @@ A Python client library for interacting with the AtlanticWave-SDX L2VPN API.
 
 class SDXClient:
     """
-    A client class for managing interactions with the AtlanticWave-SDX L2VPN API.
+    A client class for managing interactions
+        with the AtlanticWave-SDX L2VPN API.
 
     Attributes:
     - base_url (str): The base URL of the SDX API.
@@ -26,16 +27,39 @@ class SDXClient:
         r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
     )
 
-    def __init__(self, base_url):
+    def __init__(
+        self,
+        base_url,
+        name=None,
+        endpoints=None,
+        description=None,
+        notifications=None,
+        scheduling=None,
+        qos_metrics=None,
+    ):
         """
         Initializes an instance of SDXClient.
 
         Args:
         - base_url (str): The base URL of the SDX API.
+        - name (str): The name of the SDX client.
+        - endpoints (lsit): List of endpoints associated with the client.
+        - description (str, optional): Description of
+            the client (default: None).
+        - notifications (list, optional): List of
+            notification settings (default: None).
+        - scheduling (dict, optional): Scheduling
+            configuration (default: None).
+        - qos_metrics (dict, optional): Quality
+            of service metrics (default: None).
         """
         self.base_url = base_url
         self._name = None
         self._endpoints = []
+        self.description = description
+        self.notifications = []
+        self.scheduling = {}
+        self.qos_metrics = {}
 
     @property
     def name(self):
@@ -60,7 +84,8 @@ class SDXClient:
 
         Raises:
         - TypeError: If the provided name is not a string.
-        - ValueError: If the provided name exceeds 50 characters or is an empty string.
+        - ValueError: If the provided name exceeds
+            50 characters or is an empty string.
         """
         # Name value must be passed as a string.
         if not isinstance(value, str):
@@ -101,24 +126,37 @@ class SDXClient:
             - If the VLAN value is not a string.
         - ValueError:
             - If the endpoints list has less than 2 entries.
-            - If any endpoint dictionary does not contain a non-empty 'port_id' key.
-            - If the port_id value does not follow the format: 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>'
-            - If any endpoint dictionary does not contain a non-empty 'vlan' key.
-            - If any vlan value is other than an integer string, a valid range format, or any of the values 'any', 'all', or 'untagged'.
-            - If the vlan value is an integer string that is not between 1 and 4095 inclusive.
-            - If the vlan value 'all' is used with any other value but 'all'.
-            - If a range is used for the vlan value with any other value but the same range value.
-            - If the vlan range value does not follow the format 'VLAN ID 1:VLAN ID2' where 1 <= VLAN ID1 < VLAN ID2 <= 4095.
+            - If any endpoint dictionary does not
+                contain a non-empty 'port_id' key.
+            - If the port_id value does not follow
+                the format: 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>'
+            - If any endpoint dictionary does not
+                contain a non-empty 'vlan' key.
+            - If any vlan value is other than an integer
+                string, a valid range format, or any of
+                    the values 'any', 'all', or 'untagged'.
+            - If the vlan value is an integer string that
+                is not between 1 and 4095 inclusive.
+            - If the vlan value 'all' is used with any
+                other value but 'all'.
+            - If a range is used for the vlan value with any
+                other value but the same range value.
+            - If the vlan range value does not follow the
+                format 'VLAN ID 1:VLAN ID2' where
+                    1 <= VLAN ID1 < VLAN ID2 <= 4095.
         """
-        # If the value passed as the endpoints value is not a list, raise TypeError.
+        # If the value passed as the endpoints
+        # value is not a list, raise TypeError.
         if not isinstance(value, list):
             raise TypeError("Endpoints must be a list.")
 
-        # If every item of the endpoints list is not a dictionary, raise TypeError.
+        # If every item of the endpoints list
+        # is not a dictionary, raise TypeError.
         if not all(isinstance(item, dict) for item in value):
             raise TypeError("Endpoints must be a list of dictionaries.")
 
-        # If there are not at least 2 dictionary elements in the endpoints list, raise ValueError.
+        # If there are not at least 2 dictionary elements
+        # in the endpoints list, raise ValueError.
         if len(value) < 2:
             raise ValueError("Endpoints must contain at least 2 entries.")
 
@@ -131,17 +169,21 @@ class SDXClient:
         has_any_untagged = False
 
         for endpoint in value:
-            # If the 'port_id' key or its value is not part of the endpoint dictionary, raise ValueError.
+            # If the 'port_id' key or its value is not part of
+            # the endpoint dictionary, raise ValueError.
             if "port_id" not in endpoint or not endpoint["port_id"]:
                 raise ValueError(
                     "Each endpoint must contain a non-empty 'port_id' key."
                 )
 
-            # If the port_id value does not follow the pattern 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>', raise ValueError.
+            # If the port_id value does not follow the pattern
+            # 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>',
+            # raise ValueError.
             if not re.match(self.PORT_ID_PATTERN, endpoint["port_id"]):
                 raise ValueError(f"Invalid port_id format: {endpoint['port_id']}")
 
-            # If the 'vlan' key or its value is not part of the endpoint dictionary, raise ValueError.
+            # If the 'vlan' key or its value is not part of the
+            # endpoint dictionary, raise ValueError.
             if "vlan" not in endpoint or not endpoint["vlan"]:
                 raise ValueError("Each endpoint must contain a non-empty 'vlan' key.")
 
@@ -151,7 +193,8 @@ class SDXClient:
             if not isinstance(vlan_value, str):
                 raise TypeError("VLAN must be a string.")
 
-            # Check for the values "any", "all", and "untagged" and set the appropriate flags.
+            # Check for the values "any", "all", and "untagged" and set
+            # the appropriate flags.
             if vlan_value in special_vlans:
                 vlans.add(vlan_value)
                 if vlan_value in {"any", "untagged"}:
@@ -167,7 +210,8 @@ class SDXClient:
                         )
                     has_single_vlan = True
                     vlans.add(vlan_value)
-                # Check for correct range format and set the appropriate flag.
+                # Check for correct range format and set the
+                # appropriate flag.
                 elif ":" in vlan_value:
                     vlan_range = vlan_value.split(":")
                     if len(vlan_range) == 2:
@@ -186,7 +230,8 @@ class SDXClient:
                     raise ValueError(
                         f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
                     )
-        # Check that if range is used, all vlan values are set to the same range.
+        # Check that if range is used, all vlan
+        # values are set to the same range.
         if has_vlan_range and (
             len(vlan_ranges) > 1
             or has_single_vlan
@@ -197,12 +242,9 @@ class SDXClient:
                 "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
             )
 
-        # Check that if 'all' vlan value is used, every vlan value must be 'all'.
-        if has_special_vlan and (
-            len(vlans) > 1 
-            or has_single_vlan 
-            or has_vlan_range
-        ):
+        # Check that if 'all' vlan value is used,
+        # every vlan value must be 'all'.
+        if has_special_vlan and (len(vlans) > 1 or has_single_vlan or has_vlan_range):
             raise ValueError(
                 "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
             )
@@ -217,7 +259,8 @@ class SDXClient:
         - dict: JSON response from the API if successful.
 
         Raises:
-        - ValueError: If name or endpoints are not provided or do not meet requirements.
+        - ValueError: If name or endpoints are not provided
+            or do not meet requirements.
         - SDXException: If the API request fails.
         """
 

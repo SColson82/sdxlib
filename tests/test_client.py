@@ -6,17 +6,18 @@ from sdxlib.client import SDXClient, SDXException
 """
 Unit tests for the sdxlib library
 
-Run from the SDXLIB parent directory Using: 
+Run from the SDXLIB parent directory Using:
     python -m unittest discover -v tests
 """
 
 
 class TestSDXClient(unittest.TestCase):
 
-    #### API Call Succeeds ####
+    # API Call Succeeds
     @patch("sdxlib.client.requests.post")
     def test_create_l2vpn_success(self, mock_post):
-        """Checks that the 'create_l2vpn' method correctly handles a successful API call."""
+        """Checks that the 'create_l2vpn' method correctly handles a
+        successful API call."""
         mock_post.return_value.ok = True
         mock_post.return_value.json.return_value = {"status": "Accepted"}
 
@@ -36,6 +37,7 @@ class TestSDXClient(unittest.TestCase):
         response = client.create_l2vpn()
 
         self.assertEqual(response, {"status": "Accepted"})
+
         mock_post.assert_called_once_with(
             "http://example.com/l2vpn",
             json={
@@ -53,10 +55,11 @@ class TestSDXClient(unittest.TestCase):
             },
         )
 
-    #### API Call Fails ####
+    # API Call Fails
     @patch("sdxlib.client.requests.post")
     def test_create_l2vpn_api_failure(self, mock_post):
-        """Checks that the 'create_l2vpn' method raises and 'SDXException on API failure."""
+        """Checks that the 'create_l2vpn' method raises an
+        'SDXException on API failure."""
         mock_post.return_value.ok = False
         mock_post.return_value.status_code = 500
         mock_post.return_value.text = "Internal Server Error"
@@ -81,7 +84,7 @@ class TestSDXClient(unittest.TestCase):
         self.assertEqual(context.exception.message, "Internal Server Error")
         mock_post.assert_called_once()
 
-    #### Edge Case Tests for Name ####
+    # Edge Case Tests for Name #
     def test_create_l2vpn_name_required(self):
         """Checks that 'name' is provided."""
         client = SDXClient(base_url="http://example.com")
@@ -120,7 +123,7 @@ class TestSDXClient(unittest.TestCase):
             client.name = 123
         self.assertEqual(str(context.exception), "Name must be a string.")
 
-    #### Edge Case Tests for Endpoints ####
+    # Edge Case Tests for Endpoints #
     def test_create_l2vpn_endpoints_required(self):
         """Checks that 'endpoints' is provided."""
         client = SDXClient(base_url="http://example.com")
@@ -177,7 +180,7 @@ class TestSDXClient(unittest.TestCase):
             str(context.exception), "Endpoints must be a list of dictionaries."
         )
 
-    ### Edge Case Tests for Port ID ###
+    # Edge Case Tests for Port ID #
     def test_endpoints_missing_port_id(self):
         """Checks that each endpoint contains a 'port_id' key."""
         client = SDXClient(base_url="http://example.com")
@@ -225,7 +228,7 @@ class TestSDXClient(unittest.TestCase):
             str(context.exception), "Invalid port_id format: invalid-port_id"
         )
 
-    ### Edge Case Tests for VLAN ###
+    # Edge Case Tests for VLAN #
     def test_endpoints_missing_vlan_key(self):
         """Checks that each endpoint contains a 'vlan' key."""
         client = SDXClient(base_url="http://example.com")
@@ -259,7 +262,7 @@ class TestSDXClient(unittest.TestCase):
             str(context.exception), "Each endpoint must contain a non-empty 'vlan' key."
         )
 
-    #### VLAN Integer String ####
+    # VLAN Integer String #
     def test_endpoints_vlan_integer_string_valid(self):
         """Checks that setting a VLAN ID as a valid integer string works."""
         client = SDXClient(base_url="http://example.com")
@@ -304,7 +307,7 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(str(context.exception), "VLAN must be a string.")
 
-    #### VLAN value "any" ####
+    # VLAN value "any" #
     def test_endpoints_vlan_any_single(self):
         """Checks that setting a VLAN to 'any' for a single endpoint works."""
         client = SDXClient(base_url="http://example.com")
@@ -452,7 +455,7 @@ class TestSDXClient(unittest.TestCase):
             "Invalid VLAN value: '5000'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range.",
         )
 
-    #### VLAN value "untagged" ####
+    # VLAN value "untagged" #
     def test_endpoints_vlan_untagged_single(self):
         """Checks that setting a VLAN to 'untagged' for a single endpoint works."""
         client = SDXClient(base_url="http://example.com")
@@ -572,7 +575,7 @@ class TestSDXClient(unittest.TestCase):
             "Invalid VLAN value: '5000'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range.",
         )
 
-    ### VLAN range ###
+    # VLAN range #
     def test_endpoints_vlan_range_valid(self):
         """Checks that setting a valid VLAN range works."""
         client = SDXClient(base_url="http://example.com")
@@ -600,6 +603,7 @@ class TestSDXClient(unittest.TestCase):
                 },
             ],
         )
+
     def test_endpoints_vlan_range_empty_vlan_value(self):
         """Checks that each endpoint's 'vlan' key cannot be empty when used with range."""
         client = SDXClient(base_url="http://example.com")
@@ -808,7 +812,7 @@ class TestSDXClient(unittest.TestCase):
             "Invalid VLAN value: '5000'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range.",
         )
 
-    #### VLAN value "all" ###
+    # VLAN value "all" #
     def test_endpoints_vlan_all_valid(self):
         """Checks that setting a VLAN to 'all' for a single endpoint works if all endpoints have 'all'."""
         client = SDXClient(base_url="http://example.com")
@@ -894,7 +898,7 @@ class TestSDXClient(unittest.TestCase):
             "All endpoints must have the same VLAN value if one endpoint is 'all' or a range.",
         )
 
-    #### Other VLAN value tests ####
+    # Other VLAN value tests #
     def test_endpoints_valid_vlan_format(self):
         """Checks that the 'vlan' key follows the required format."""
         client = SDXClient(base_url="http://example.com")
@@ -914,7 +918,7 @@ class TestSDXClient(unittest.TestCase):
             "Invalid VLAN value: 'invalid_vlan'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range.",
         )
 
-    #### Additional Success Tests ####
+    # Additional Success Tests #
     def test_valid_name(self):
         """Checks that a valid name is accepted."""
         client = SDXClient(base_url="http://example.com")
