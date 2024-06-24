@@ -13,9 +13,6 @@ class SDXClient:
     PORT_ID_PATTERN = (
         r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
     )
-    # VLAN_PATTERN = re.compile(
-    #     r'^(?:any|untagged|all|[1-9]\d{0,3}|(?:[1-9]\d{0,3}:\d{1,4}))$'
-    # )
 
     def __init__(self, base_url):
         """
@@ -111,8 +108,11 @@ class SDXClient:
 
         vlans = set()
         vlan_ranges = set()
+        special_vlans = {"any", "all", "untagged"}
         has_vlan_range = False
-        # endpoints_with_vlan_range = 0
+        has_single_vlan = False
+        has_special_vlan = False
+        has_any_untagged = False
 
         for endpoint in value:
             if "port_id" not in endpoint or not endpoint["port_id"]:
@@ -131,14 +131,20 @@ class SDXClient:
             if not isinstance(vlan_value, str):
                 raise TypeError("VLAN must be a string.")
 
-            if vlan_value in {"any", "all", "untagged"}:
+            if vlan_value in special_vlans:
                 vlans.add(vlan_value)
+                if vlan_value in {"any", "untagged"}:
+                    has_any_untagged = True
+                else:
+                    has_special_vlan = True
             else:
                 if vlan_value.isdigit():
                     if not (1 <= int(vlan_value) <= 4095):
                         raise ValueError(
                             f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
                         )
+                    has_single_vlan = True
+                    vlans.add(vlan_value)
                 elif ":" in vlan_value:
                     vlan_range = vlan_value.split(":")
                     if len(vlan_range) == 2:
@@ -147,10 +153,8 @@ class SDXClient:
                             raise ValueError(
                                 f"Invalid VLAN range values: '{vlan_value}'. Must be between 1 and 4095, and VLAN ID1 must be less than VLAN ID2."
                             )
-                        if vlan_value not in vlan_ranges:
-                            vlan_ranges.add(vlan_value)
+                        vlan_ranges.add(vlan_value)
                         has_vlan_range = True
-                        # endpoints_with_vlan_range += 1
                     else:
                         raise ValueError(
                             f"Invalid VLAN range format: '{vlan_value}'. Must be 'VLAN ID1:VLAN ID2'."
@@ -160,13 +164,18 @@ class SDXClient:
                         f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
                     )
 
-        if has_vlan_range and len(vlan_range) > 1:
-            # if len(vlan_range) > 1:
+        if has_vlan_range and (
+            len(vlan_ranges) > 1
+            or has_single_vlan
+            or has_special_vlan
+            or has_any_untagged
+        ):
             raise ValueError(
                 "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
             )
 
-        if "all" in vlans and len(vlans) > 1:
+        # if "all" in vlans and len(vlans) > 1:
+        if has_special_vlan and (len(vlans) > 1 or has_single_vlan or has_vlan_range):
             raise ValueError(
                 "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
             )

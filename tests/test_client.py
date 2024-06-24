@@ -817,7 +817,7 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(
             str(context.exception),
-            "All endpoints must have the same VLAN value if one endpoint is 'all'.",
+            "All endpoints must have the same VLAN value if one endpoint is 'all' or a range.",
         )
 
     def test_endpoints_vlan_all_any(self):
