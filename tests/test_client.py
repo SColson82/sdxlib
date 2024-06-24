@@ -600,6 +600,23 @@ class TestSDXClient(unittest.TestCase):
                 },
             ],
         )
+    def test_endpoints_vlan_range_empty_vlan_value(self):
+        """Checks that each endpoint's 'vlan' key cannot be empty when used with range."""
+        client = SDXClient(base_url="http://example.com")
+        with self.assertRaises(ValueError) as context:
+            client.endpoints = [
+                {
+                    "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
+                    "vlan": "",
+                },
+                {
+                    "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
+                    "vlan": "100:200",
+                },
+            ]
+        self.assertEqual(
+            str(context.exception), "Each endpoint must contain a non-empty 'vlan' key."
+        )
 
     def test_endpoints_vlan_range_mismatch(self):
         """Checks that setting a VLAN range for one endpoint and a different range for another raised a ValueError."""
@@ -637,6 +654,25 @@ class TestSDXClient(unittest.TestCase):
         self.assertEqual(
             str(context.exception),
             "All endpoints must have the same VLAN value if one endpoint is 'all' or a range.",
+        )
+
+    def test_endpoints_vlan_range_invalid_endpoint(self):
+        """Checks that setting a VLAN range for one endpoint and an invlaid value for another raises a ValueError."""
+        client = SDXClient(base_url="http://example.com")
+        with self.assertRaises(ValueError) as context:
+            client.endpoints = [
+                {
+                    "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
+                    "vlan": "100:200",
+                },
+                {
+                    "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
+                    "vlan": "invalid value",
+                },
+            ]
+        self.assertEqual(
+            str(context.exception),
+            "Invalid VLAN value: 'invalid value'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range.",
         )
 
     def test_endpoints_vlan_range_and_any(self):
