@@ -251,6 +251,31 @@ class SDXClient:
 
         self._endpoints = value
 
+    @property
+    def description(self):
+        """
+        Getter for the description attribute.
+
+        Returns:
+        - str: The current description.
+        """
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        """
+        Setter for the description attribute.
+
+        Args:
+        - value (str): The description of the client.
+
+        Raises:
+        - ValueError: If the description is longer than 255 characters.
+        """
+        if value is not None and len(value) > 255:
+            raise ValueError("Description attribute must be less than 256 characters.")
+        self._description = value
+
     def create_l2vpn(self):
         """
         Creates an L2VPN using the provided name and endpoints.
