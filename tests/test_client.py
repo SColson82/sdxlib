@@ -967,21 +967,11 @@ class TestSDXClient(unittest.TestCase):
             },
         ]
         valid_notifications = [
-            {
-                "email":
-                "user1@email.com",
-            },
-            {
-                "email":
-                "user2@email.com",
-            },
+            {"email": "user1@email.com",},
+            {"email": "user2@email.com",},
         ]
         client.notifications = valid_notifications
-        self.assertEqual(
-            client.notifications,
-            valid_notifications
-        )
-
+        self.assertEqual(client.notifications, valid_notifications)
 
     def test_notifications_not_list(self):
         """Test setting notifications with a non-list value, expecting a ValueError."""
@@ -997,15 +987,11 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
-        invalid_notifications = {
-            "email":
-            "user1@email.com",
-        },
+        invalid_notifications = ({"email": "user1@email.com",},)
         with self.assertRaises(ValueError) as context:
             client.notifications = invalid_notifications
         self.assertEqual(
-            str(context.exception),
-            "Notifications must be provided as a list."
+            str(context.exception), "Notifications must be provided as a list."
         )
 
     def test_notifications_list_element_not_dict(self):
@@ -1023,19 +1009,14 @@ class TestSDXClient(unittest.TestCase):
             },
         ]
         invalid_notifications = [
-            {
-                "email":
-                "user1@email.com",
-            },
-            "not a dict"
+            {"email": "user1@email.com",},
+            "not a dict",
         ]
         with self.assertRaises(ValueError) as context:
             client.notifications = invalid_notifications
         self.assertEqual(
-            str(context.exception),
-            "Each notification must be a dictionary with an 'email' key."
+            str(context.exception), "Invalid notification format or email address.",
         )
-
 
     def test_notifications_dict_no_email_key(self):
         """Test setting notification with a dictionary missing the 'email' key, expecting a ValueError."""
@@ -1051,21 +1032,15 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
+
         invalid_notifications = [
-            {
-                "email":
-                "user1@email.com",
-            },
-            {
-                "not_email":
-                "user2@email.com",
-            },
+            {"email": "user1@email.com",},
+            {"not_email": "user2@email.com",},
         ]
         with self.assertRaises(ValueError) as context:
             client.notifications = invalid_notifications
         self.assertEqual(
-            str(context.exception),
-            "Each notification must be a dictionary with an 'email' key."
+            str(context.exception), "Invalid notification format or email address.",
         )
 
     def test_notifications_dict_non_valid_email(self):
@@ -1083,20 +1058,13 @@ class TestSDXClient(unittest.TestCase):
             },
         ]
         invalid_notifications = [
-            {
-                "email":
-                "user1@email.com",
-            },
-            {
-                "email":
-                "invalid_email",
-            },
+            {"email": "user1@email.com",},
+            {"email": "invalid_email",},
         ]
         with self.assertRaises(ValueError) as context:
             client.notifications = invalid_notifications
         self.assertEqual(
-            str(context.exception),
-            "Each 'email' value must be a valid email address."
+            str(context.exception), "Invalid notification format or email address."
         )
 
     def test_notifications_list_too_long(self):
@@ -1113,16 +1081,12 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
-        exceeding_notifications = [
-            {
-                "email": f"user{i}@email.com" 
-            } for i in range(11)
-        ]
+        exceeding_notifications = [{"email": f"user{i}@email.com"} for i in range(11)]
         with self.assertRaises(ValueError) as context:
             client.notifications = exceeding_notifications
         self.assertEqual(
             str(context.exception),
-            "Notifications can contain at most 10 email addresses."
+            "Notifications can contain at most 10 email addresses.",
         )
 
     # Additional Success Tests #
