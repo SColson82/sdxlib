@@ -54,10 +54,10 @@ class SDXClient:
             of service metrics (default: None).
         """
         self.base_url = base_url
-        self._name = None
+        self._name = name
         self._endpoints = []
         self.description = description
-        self.notifications = []
+        self.notifications = self._validate_notifications(notifications)
         self.scheduling = {}
         self.qos_metrics = {}
 
@@ -276,6 +276,39 @@ class SDXClient:
             raise ValueError("Description attribute must be less than 256 characters.")
         self._description = value
 
+    @property
+    def notifications(self):
+        return self._notifications
+
+    @notifications.setter
+    def notifications(self, value):
+        self._notifications = self._validate_notifications(value)
+
+    @staticmethod
+    def is_valid_email(email):
+        email_regex = (
+            r"^\S+@\S+$"
+            # r"^[a-zA-Z0-9._%+-]+@[a-zA-Z]{2,}$"
+        )
+        return re.match(email_regex, email) is not None
+
+    def _validate_notifications(self, notifications):
+        if notifications is None:
+            return None
+        if not isinstance(notifications, list):
+            raise ValueError("Notifications must be provided as a list.")
+        if len(notifications) > 10:
+            raise ValueError("Notifications can contain at most 10 email addresses.")
+        # Validate individual notifications using list comprehension
+        if any(
+            not isinstance(n, dict)
+            or "email" not in n
+            or not self.is_valid_email(n["email"])
+            for n in notifications
+        ):
+            raise ValueError("Invalid notification format or email address.")
+        return notifications
+
     def create_l2vpn(self):
         """
         Creates an L2VPN using the provided name and endpoints.
@@ -359,9 +392,9 @@ class SDXException(Exception):
 
 if __name__ == "__main__":
     # Example usage
-    client = SDXClient(base_url="http://example.com")
-    client.name = "Test L2VPN"
-    client.endpoints = [
+    # client = SDXClient(base_url="http://example.com")
+    client_name = "Test L2VPN"
+    client_endpoints = [
         {
             "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
             "vlan": "100",
@@ -371,6 +404,10 @@ if __name__ == "__main__":
             "vlan": "200",
         },
     ]
+
+    client = SDXClient(
+        base_url="http://example.com", name=client_name, endpoints=client_endpoints
+    )
 
     try:
         response = client.create_l2vpn()
