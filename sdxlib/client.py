@@ -30,7 +30,7 @@ class SDXClient:
     def __init__(
         self,
         base_url,
-        name=None,
+        name,
         endpoints=None,
         description=None,
         notifications=None,
@@ -54,7 +54,7 @@ class SDXClient:
             of service metrics (default: None).
         """
         self.base_url = base_url
-        self._name = name
+        self.name = name
         self._endpoints = []
         self.description = description
         self.notifications = self._validate_notifications(notifications)
@@ -87,16 +87,19 @@ class SDXClient:
         - ValueError: If the provided name exceeds
             50 characters or is an empty string.
         """
-        # Name value must be passed as a string.
-        if not isinstance(value, str):
-            raise TypeError("Name must be a string.")
-        # Name value must be 50 characters or less.
-        if len(value) > 50:
-            raise ValueError("Name must be 50 characters or fewer.")
-        # Name value must not be empty.
-        if value == "":
-            raise ValueError("Name cannot be an empty string.")
+        if not isinstance(value, str) or not value or len(value) > 50:
+            raise ValueError("Name must be a non-empty string with maximum 50 characters.")
         self._name = value
+        # # Name value must be passed as a string.
+        # if not isinstance(value, str):
+        #     raise TypeError("Name must be a string.")
+        # # Name value must be 50 characters or less.
+        # if len(value) > 50:
+        #     raise ValueError("Name must be 50 characters or fewer.")
+        # # Name value must not be empty.
+        # if value == "":
+        #     raise ValueError("Name cannot be an empty string.")
+        # self._name = value
 
     @property
     def endpoints(self):
