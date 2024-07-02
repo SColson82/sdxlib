@@ -31,7 +31,7 @@ class SDXClient:
         self,
         base_url,
         name,
-        endpoints=None,
+        endpoints,
         description=None,
         notifications=None,
         scheduling=None,
@@ -55,7 +55,7 @@ class SDXClient:
         """
         self.base_url = base_url
         self.name = name
-        self._endpoints = []
+        self.endpoints = self._validate_endpoints(endpoints)
         self.description = description
         self.notifications = self._validate_notifications(notifications)
         self.scheduling = {}
@@ -112,7 +112,7 @@ class SDXClient:
         Raises:
         - None
         """
-        return self._endpoints
+        return self.__endpoints
 
     @endpoints.setter
     def endpoints(self, value):
@@ -148,111 +148,112 @@ class SDXClient:
                 format 'VLAN ID 1:VLAN ID2' where
                     1 <= VLAN ID1 < VLAN ID2 <= 4095.
         """
-        # If the value passed as the endpoints
-        # value is not a list, raise TypeError.
-        if not isinstance(value, list):
-            raise TypeError("Endpoints must be a list.")
+        # # If the value passed as the endpoints
+        # # value is not a list, raise TypeError.
+        # if not isinstance(value, list):
+        #     raise TypeError("Endpoints must be a list.")
 
-        # If every item of the endpoints list
-        # is not a dictionary, raise TypeError.
-        if not all(isinstance(item, dict) for item in value):
-            raise TypeError("Endpoints must be a list of dictionaries.")
+        # # If every item of the endpoints list
+        # # is not a dictionary, raise TypeError.
+        # if not all(isinstance(item, dict) for item in value):
+        #     raise TypeError("Endpoints must be a list of dictionaries.")
 
-        # If there are not at least 2 dictionary elements
-        # in the endpoints list, raise ValueError.
-        if len(value) < 2:
-            raise ValueError("Endpoints must contain at least 2 entries.")
+        # # If there are not at least 2 dictionary elements
+        # # in the endpoints list, raise ValueError.
+        # if len(value) < 2:
+        #     raise ValueError("Endpoints must contain at least 2 entries.")
 
-        vlans = set()
-        vlan_ranges = set()
-        special_vlans = {"any", "all", "untagged"}
-        has_vlan_range = False
-        has_single_vlan = False
-        has_special_vlan = False
-        has_any_untagged = False
+        # vlans = set()
+        # vlan_ranges = set()
+        # special_vlans = {"any", "all", "untagged"}
+        # has_vlan_range = False
+        # has_single_vlan = False
+        # has_special_vlan = False
+        # has_any_untagged = False
 
-        for endpoint in value:
-            # If the 'port_id' key or its value is not part of
-            # the endpoint dictionary, raise ValueError.
-            if "port_id" not in endpoint or not endpoint["port_id"]:
-                raise ValueError(
-                    "Each endpoint must contain a non-empty 'port_id' key."
-                )
+        # for endpoint in value:
+        #     # If the 'port_id' key or its value is not part of
+        #     # the endpoint dictionary, raise ValueError.
+        #     if "port_id" not in endpoint or not endpoint["port_id"]:
+        #         raise ValueError(
+        #             "Each endpoint must contain a non-empty 'port_id' key."
+        #         )
 
-            # If the port_id value does not follow the pattern
-            # 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>',
-            # raise ValueError.
-            if not re.match(self.PORT_ID_PATTERN, endpoint["port_id"]):
-                raise ValueError(f"Invalid port_id format: {endpoint['port_id']}")
+        #     # If the port_id value does not follow the pattern
+        #     # 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>',
+        #     # raise ValueError.
+        #     if not re.match(self.PORT_ID_PATTERN, endpoint["port_id"]):
+        #         raise ValueError(f"Invalid port_id format: {endpoint['port_id']}")
 
-            # If the 'vlan' key or its value is not part of the
-            # endpoint dictionary, raise ValueError.
-            if "vlan" not in endpoint or not endpoint["vlan"]:
-                raise ValueError("Each endpoint must contain a non-empty 'vlan' key.")
+        #     # If the 'vlan' key or its value is not part of the
+        #     # endpoint dictionary, raise ValueError.
+        #     if "vlan" not in endpoint or not endpoint["vlan"]:
+        #         raise ValueError("Each endpoint must contain a non-empty 'vlan' key.")
 
-            vlan_value = endpoint["vlan"]
+        #     vlan_value = endpoint["vlan"]
 
-            # If the vlan value is not a string, raise TypeError.
-            if not isinstance(vlan_value, str):
-                raise TypeError("VLAN must be a string.")
+        #     # If the vlan value is not a string, raise TypeError.
+        #     if not isinstance(vlan_value, str):
+        #         raise TypeError("VLAN must be a string.")
 
-            # Check for the values "any", "all", and "untagged" and set
-            # the appropriate flags.
-            if vlan_value in special_vlans:
-                vlans.add(vlan_value)
-                if vlan_value in {"any", "untagged"}:
-                    has_any_untagged = True
-                else:
-                    has_special_vlan = True
-            # Cleck for an integer string between 1 and 4095 inclusive.
-            else:
-                if vlan_value.isdigit():
-                    if not (1 <= int(vlan_value) <= 4095):
-                        raise ValueError(
-                            f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
-                        )
-                    has_single_vlan = True
-                    vlans.add(vlan_value)
-                # Check for correct range format and set the
-                # appropriate flag.
-                elif ":" in vlan_value:
-                    vlan_range = vlan_value.split(":")
-                    if len(vlan_range) == 2:
-                        vlan_id1, vlan_id2 = map(int, vlan_range)
-                        if not (1 <= vlan_id1 < vlan_id2 <= 4095):
-                            raise ValueError(
-                                f"Invalid VLAN range values: '{vlan_value}'. Must be between 1 and 4095, and VLAN ID1 must be less than VLAN ID2."
-                            )
-                        vlan_ranges.add(vlan_value)
-                        has_vlan_range = True
-                    else:
-                        raise ValueError(
-                            f"Invalid VLAN range format: '{vlan_value}'. Must be 'VLAN ID1:VLAN ID2'."
-                        )
-                else:
-                    raise ValueError(
-                        f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
-                    )
-        # Check that if range is used, all vlan
-        # values are set to the same range.
-        if has_vlan_range and (
-            len(vlan_ranges) > 1
-            or has_single_vlan
-            or has_special_vlan
-            or has_any_untagged
-        ):
-            raise ValueError(
-                "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
-            )
+        #     # Check for the values "any", "all", and "untagged" and set
+        #     # the appropriate flags.
+        #     if vlan_value in special_vlans:
+        #         vlans.add(vlan_value)
+        #         if vlan_value in {"any", "untagged"}:
+        #             has_any_untagged = True
+        #         else:
+        #             has_special_vlan = True
+        #     # Cleck for an integer string between 1 and 4095 inclusive.
+        #     else:
+        #         if vlan_value.isdigit():
+        #             if not (1 <= int(vlan_value) <= 4095):
+        #                 raise ValueError(
+        #                     f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
+        #                 )
+        #             has_single_vlan = True
+        #             vlans.add(vlan_value)
+        #         # Check for correct range format and set the
+        #         # appropriate flag.
+        #         elif ":" in vlan_value:
+        #             vlan_range = vlan_value.split(":")
+        #             if len(vlan_range) == 2:
+        #                 vlan_id1, vlan_id2 = map(int, vlan_range)
+        #                 if not (1 <= vlan_id1 < vlan_id2 <= 4095):
+        #                     raise ValueError(
+        #                         f"Invalid VLAN range values: '{vlan_value}'. Must be between 1 and 4095, and VLAN ID1 must be less than VLAN ID2."
+        #                     )
+        #                 vlan_ranges.add(vlan_value)
+        #                 has_vlan_range = True
+        #             else:
+        #                 raise ValueError(
+        #                     f"Invalid VLAN range format: '{vlan_value}'. Must be 'VLAN ID1:VLAN ID2'."
+        #                 )
+        #         else:
+        #             raise ValueError(
+        #                 f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
+        #             )
+        # # Check that if range is used, all vlan
+        # # values are set to the same range.
+        # if has_vlan_range and (
+        #     len(vlan_ranges) > 1
+        #     or has_single_vlan
+        #     or has_special_vlan
+        #     or has_any_untagged
+        # ):
+        #     raise ValueError(
+        #         "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
+        #     )
 
-        # Check that if 'all' vlan value is used,
-        # every vlan value must be 'all'.
-        if has_special_vlan and (len(vlans) > 1 or has_single_vlan or has_vlan_range):
-            raise ValueError(
-                "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
-            )
+        # # Check that if 'all' vlan value is used,
+        # # every vlan value must be 'all'.
+        # if has_special_vlan and (len(vlans) > 1 or has_single_vlan or has_vlan_range):
+        #     raise ValueError(
+        #         "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
+        #     )
 
-        self._endpoints = value
+        # self._endpoints = value
+        self.__endpoints = self._validate_endpoints(value)
 
     @property
     def description(self):
@@ -311,6 +312,104 @@ class SDXClient:
         ):
             raise ValueError("Invalid notification format or email address.")
         return notifications
+
+    def _validate_endpoints(self, endpoints):
+        if not isinstance(endpoints, list):
+            raise TypeError("Endpoints must be a list.")
+        if len(endpoints) < 2:
+            raise ValueError("Endpoints must contain at least 2 entries.")
+        
+        vlans = set()
+        vlan_ranges = set()
+        special_vlans = {"any", "all", "untagged"}
+        has_vlan_range = False
+        has_single_vlan = False
+        has_special_vlan = False
+        has_any_untagged = False
+
+        validated_endpoints = []
+        for endpoint in endpoints:
+            validated_endpoint = self._validate_endpoint_dict(endpoint)
+            validated_endpoints.append(validated_endpoint)
+        
+            vlan_value = endpoint["vlan"]
+            if vlan_value in special_vlans:
+                vlans.add(vlan_value)
+                if vlan_value in {"any", "untagged"}:
+                    has_any_untagged = True
+                else:
+                    has_special_vlan = True
+            elif vlan_value.isdigit():
+                has_single_vlan = True
+                vlans.add(vlan_value)
+            elif ":" in vlan_value:
+                vlan_ranges.add(vlan_value)
+                has_vlan_range = True        
+
+            # Check that if range is used, all vlan
+            # values are set to the same range.
+            if has_vlan_range and (
+                len(vlan_ranges) > 1
+                or has_single_vlan
+                or has_special_vlan
+                or has_any_untagged
+            ):
+                raise ValueError(
+                    "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
+                )
+
+            # Check that if 'all' vlan value is used,
+            # every vlan value must be 'all'.
+            if has_special_vlan and (len(vlans) > 1 or has_single_vlan or has_vlan_range):
+                raise ValueError(
+                    "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
+                )
+
+        return validated_endpoints
+    
+    def _validate_endpoint_dict(self, endpoint_dict):
+        if not isinstance(endpoint_dict, dict):
+            raise TypeError("Endpoints must be a list of dictionaries.")
+        
+        # Validate 'port_id'
+        if "port_id" not in endpoint_dict or not endpoint_dict["port_id"]:
+            raise ValueError("Each endpoint must contain a non-empty 'port_id' key.")
+        if not re.match(self.PORT_ID_PATTERN, endpoint_dict["port_id"]):
+            raise ValueError(f"Invalid port_id format: {endpoint_dict['port_id']}")
+        
+        # Validate 'vlan'
+        if "vlan" not in endpoint_dict or not endpoint_dict["vlan"]:
+            raise ValueError("Each endpoint must contain a non-empty 'vlan' key.")
+        vlan_value = endpoint_dict["vlan"]
+
+        if not isinstance(vlan_value, str):
+            raise TypeError("VLAN must be a string.")
+        
+        valid_vlans = {"any", "all", "untagged"}
+
+        if vlan_value in valid_vlans:
+            pass  # Valid special VLAN value
+        elif vlan_value.isdigit():
+            vlan_int = int(vlan_value)
+            if not (1 <= vlan_int <= 4095):
+                raise ValueError(f"Invalid VLAN value: '{vlan_value}'. Must be between 1 and 4095.")
+        elif ":" in vlan_value:
+            vlan_range = vlan_value.split(":")
+            if len(vlan_range) != 2:
+                raise ValueError(f"Invalid VLAN range values: '{vlan_value}'. Must be 'VLAN ID1:VLAN ID2'.")
+            try:
+                vlan_id1, vlan_id2 = map(int, vlan_range)
+                if not (1 <= vlan_id1 < vlan_id2 <= 4095):
+                    raise ValueError(f"Invalid VLAN range values: '{vlan_value}'. Must be between 1 and 4095, and VLAN ID1 must be less than VLAN ID2.")
+            except ValueError:
+                raise ValueError(f"Invalid VLAN range format: '{vlan_value}'. Must be 'VLAN ID1:VLAN ID2'.")
+        else:
+            raise ValueError(f"Invalid VLAN value: '{vlan_value}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range.")
+
+        return endpoint_dict
+    
+    # def update_endpoints(self, endpoints):
+    #     self.endpoints = endpoints
 
     def create_l2vpn(self):
         """
