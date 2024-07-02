@@ -22,7 +22,6 @@ class TestSDXClient(unittest.TestCase):
         mock_post.return_value.json.return_value = {"status": "Accepted"}
 
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -65,7 +64,6 @@ class TestSDXClient(unittest.TestCase):
         mock_post.return_value.text = "Internal Server Error"
 
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -84,7 +82,7 @@ class TestSDXClient(unittest.TestCase):
         self.assertEqual(context.exception.message, "Internal Server Error")
         mock_post.assert_called_once()
 
-    # # Unit Tests for Name Attribute#
+    # Unit Tests for Name Attribute#
     # def test_create_l2vpn_name_required(self):
     #     """Checks that 'name' is provided."""
     #     client = SDXClient(base_url="http://example.com", name="Test L2VPN")
@@ -107,14 +105,20 @@ class TestSDXClient(unittest.TestCase):
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
         with self.assertRaises(ValueError) as context:
             client.name = ""
-        self.assertEqual(str(context.exception), "Name must be a non-empty string with maximum 50 characters.")
+        self.assertEqual(
+            str(context.exception),
+            "Name must be a non-empty string with maximum 50 characters.",
+        )
 
     def test_name_too_long(self):
         """Checks that the 'name' exceeding 50 characters is not allowed."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
         with self.assertRaises(ValueError) as context:
             client.name = "This is a very long name that exceeds 50 chatacters limit"
-        self.assertEqual(str(context.exception), "Name must be a non-empty string with maximum 50 characters.")
+        self.assertEqual(
+            str(context.exception),
+            "Name must be a non-empty string with maximum 50 characters.",
+        )
 
     # def test_name_non_string(self):
     #     """Checks that a non-string value is not allowed for the 'name' attribute."""
@@ -127,7 +131,6 @@ class TestSDXClient(unittest.TestCase):
     def test_create_l2vpn_endpoints_required(self):
         """Checks that 'endpoints' is provided."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         with self.assertRaises(ValueError) as context:
             client.create_l2vpn()
         self.assertEqual(str(context.exception), "Endpoints attribute is required.")
@@ -135,7 +138,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_list_check(self):
         """Checks that non-list value is not allowed for the 'endpoints' attribute."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         with self.assertRaises(TypeError) as context:
             client.endpoints = "invalid endpoints"
         self.assertEqual(str(context.exception), "Endpoints must be a list.")
@@ -152,7 +154,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_min_required(self):
         """Checks that a list with less than 2 endpoints is not allowed."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         with self.assertRaises(ValueError) as context:
             client.endpoints = [
                 {
@@ -167,7 +168,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_list_of_dicts_check(self):
         """Checks that a list of non-dictionary elements is not allowed in the 'endpoints' attribute."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         with self.assertRaises(TypeError) as context:
             client.endpoints = [
                 {
@@ -266,7 +266,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_integer_string_valid(self):
         """Checks that setting a VLAN ID as a valid integer string works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -311,7 +310,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_any_single(self):
         """Checks that setting a VLAN to 'any' for a single endpoint works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -339,7 +337,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_any_untagged(self):
         """Checks that setting VLANs to 'any' and 'untagged' works together."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -367,7 +364,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_any_multiple(self):
         """Checks that setting VLAN to 'any' for multiple endpoints works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -395,7 +391,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_any_mixed(self):
         """Checks that setting VLAN to 'any' with other specific VLAN IDs works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -459,7 +454,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_untagged_single(self):
         """Checks that setting a VLAN to 'untagged' for a single endpoint works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -487,7 +481,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_untagged_multiple(self):
         """Checks that setting VLAN to 'untagged' for multiple endpoints works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -515,7 +508,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_untagged_mixed(self):
         """Checks that setting VLAN to 'untagged' with other specific VLAN IDs works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -579,7 +571,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_range_valid(self):
         """Checks that setting a valid VLAN range works."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
@@ -816,7 +807,6 @@ class TestSDXClient(unittest.TestCase):
     def test_endpoints_vlan_all_valid(self):
         """Checks that setting a VLAN to 'all' for a single endpoint works if all endpoints have 'all'."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-ox_url:test-node_name:test-port_name",
@@ -955,7 +945,6 @@ class TestSDXClient(unittest.TestCase):
     def test_notifications_valid(self):
         """Test setting and getting valid notifications within the 10-email limit."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-ox_url:test-node_name:test-port_name",
@@ -976,7 +965,6 @@ class TestSDXClient(unittest.TestCase):
     def test_notifications_not_list(self):
         """Test setting notifications with a non-list value, expecting a ValueError."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-ox_url:test-node_name:test-port_name",
@@ -997,7 +985,6 @@ class TestSDXClient(unittest.TestCase):
     def test_notifications_list_element_not_dict(self):
         """Test setting notifications with a non-dictionary entry, expecting a ValueError."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-ox_url:test-node_name:test-port_name",
@@ -1021,7 +1008,6 @@ class TestSDXClient(unittest.TestCase):
     def test_notifications_dict_no_email_key(self):
         """Test setting notification with a dictionary missing the 'email' key, expecting a ValueError."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-ox_url:test-node_name:test-port_name",
@@ -1046,7 +1032,6 @@ class TestSDXClient(unittest.TestCase):
     def test_notifications_dict_non_valid_email(self):
         """Test setting notifications with an invalid email format, expecting a ValueError."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-ox_url:test-node_name:test-port_name",
@@ -1070,7 +1055,6 @@ class TestSDXClient(unittest.TestCase):
     def test_notifications_list_too_long(self):
         """Test setting notifications exceeding 10-email limit, expecting a ValueError."""
         client = SDXClient(base_url="http://example.com", name="Test L2VPN")
-        client.name = "Test L2VPN"
         client.endpoints = [
             {
                 "port_id": "urn:sdx:port:test-ox_url:test-node_name:test-port_name",
