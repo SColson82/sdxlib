@@ -755,7 +755,7 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(
             str(context.exception),
-            "Invalid VLAN value: '5000'. Must be between 1 and 4095."
+            "Invalid VLAN value: '5000'. Must be between 1 and 4095.",
         )
 
     # VLAN value "untagged" #
@@ -928,7 +928,8 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(
             str(context.exception),
-                    "Invalid VLAN value: '5000'. Must be between 1 and 4095."        )
+            "Invalid VLAN value: '5000'. Must be between 1 and 4095.",
+        )
 
     # VLAN range #
     def test_endpoints_vlan_range_valid(self):
@@ -1331,7 +1332,8 @@ class TestSDXClient(unittest.TestCase):
             ]
         self.assertEqual(
             str(context.exception),
-                    "Invalid VLAN value: '5000'. Must be between 1 and 4095."        )
+            "Invalid VLAN value: '5000'. Must be between 1 and 4095.",
+        )
 
     # VLAN value "all" #
     def test_endpoints_vlan_all_valid(self):
@@ -1827,7 +1829,9 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
-        client = SDXClient(base_url="http://example.com", name=client_name, endpoints=client_endpoints)
+        client = SDXClient(
+            base_url="http://example.com", name=client_name, endpoints=client_endpoints
+        )
         self.assertEqual(client.name, "Test L2VPN")
 
     def test_valid_endpoints(self):
@@ -1843,7 +1847,9 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
-        client = SDXClient(base_url="http://example.com", name=client_name, endpoints=client_endpoints)
+        client = SDXClient(
+            base_url="http://example.com", name=client_name, endpoints=client_endpoints
+        )
         valid_endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
