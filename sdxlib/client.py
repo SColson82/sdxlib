@@ -178,7 +178,10 @@ class SDXClient:
 
     @notifications.setter
     def notifications(self, value):
-        self._notifications = self._validate_notifications(value)
+        if value is None or not value:
+            self._notifications = None
+        else:
+            self._notifications = self._validate_notifications(value)
 
     @property
     def scheduling(self):
