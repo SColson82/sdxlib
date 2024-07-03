@@ -1,5 +1,6 @@
 import re
 import requests
+from typing import Optional, Dict
 
 """
 sdxlib
@@ -60,7 +61,7 @@ class SDXClient:
         self.notifications = self._validate_notifications(notifications)
         self.scheduling = scheduling
         self._validate_scheduling(scheduling)
-        self.qos_metrics = {}
+        self.qos_metrics = qos_metrics
 
     @property
     def name(self):
@@ -207,6 +208,20 @@ class SDXClient:
         self._validate_scheduling(value)
         self._scheduling = value
 
+    @property
+    def qos_metrics(self):
+        return self._qos_metrics
+    
+    @qos_metrics.setter
+    def qos_metrics(self, value: Optional[Dict[str, Dict[str, int]]]):
+        
+        if value is None or not value:
+            self._qos_metrics = None
+            return
+        
+        self._validate_qos_metric(value)
+        self._qos_metrics = value
+    
     # Endpoints Methods
     def _validate_endpoints(self, endpoints):
         if not isinstance(endpoints, list):
@@ -382,6 +397,40 @@ class SDXClient:
         """
         timestamp_pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"
         return bool(re.match(timestamp_pattern, timestamp))
+
+    # Methods for Qos_metric Attribute
+    def _validate_qos_metric(self, qos_metric):
+        if qos_metric is None:
+            return
+        
+        valid_keys = {"min_bw", "max_delay", "max_number_oxps"}
+        if not set(qos_metric.keys()) <= valid_keys:
+            raise ValueError("Invalid qos_metric keys. Valid keys are: {}".format(", ".join(valid_keys)))
+        
+        for key, value_dict in qos_metric.items():
+            if not isinstance(value_dict, dict):
+                raise TypeError("qos_metric value for '{}' must be a dictionary.".format(key))
+            self._validate_qos_metric_value(key, value_dict)
+
+    def _validate_qos_metric_value(self, key, value_dict):
+        if "value" not in value_dict:
+            raise ValueError("Missing required key 'value' in qos_metric for '{}'".format(key))
+        if not isinstance(value_dict["value"], int):
+            raise TypeError("qos value for '{}' must be an integer.".format(key))
+        
+        # Specific range checks for each key
+        if key == "min_bw":
+            if not 0 <= value_dict["value"] <= 100:
+                raise ValueError("qos_metric 'min_bw' value must be between 0 and 100.")
+        elif key == "max_delay":
+            if not 0 <= value_dict["value"] <= 1000:
+                raise ValueError("qos_metric 'max_delay' value must be between 0 and 1000.")
+        elif key == "max_number_oxps":
+            if not 1 <= value_dict["value"] <=100:
+                raise ValueError("qos_metric 'max_number_oxps' value must be between 1 and 100.")
+            
+        # 'strict' key validation (default False)
+        value_dict.get("strict", False)       
 
     ### Class Methods
     def create_l2vpn(self):
