@@ -1,8 +1,8 @@
 import unittest
 from sdxlib.client import SDXClient
 
-class TestSDXClient(unittest.TestCase):
 
+class TestSDXClient(unittest.TestCase):
     def test_qos_metrics_none(self):
         """Test setting qos_metrics to None"""
         client_endpoints = [
@@ -15,7 +15,12 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
-        client = SDXClient(base_url="http://example.com", name="test", endpoints=client_endpoints, description="")
+        client = SDXClient(
+            base_url="http://example.com",
+            name="test",
+            endpoints=client_endpoints,
+            description="",
+        )
         self.assertIsNone(client.qos_metrics)
 
     def test_qos_metrics_empty_dict(self):
@@ -30,7 +35,13 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
-        client = SDXClient(base_url="http://example.com", name="test", endpoints=client_endpoints, description="", qos_metrics={})
+        client = SDXClient(
+            base_url="http://example.com",
+            name="test",
+            endpoints=client_endpoints,
+            description="",
+            qos_metrics={},
+        )
         self.assertIsNone(client.qos_metrics)
 
     def test_qos_metrics_valid(self):
@@ -49,7 +60,13 @@ class TestSDXClient(unittest.TestCase):
             "min_bw": {"value": 10, "strict": False},
             "max_delay": {"value": 200, "strict": True},
         }
-        client = SDXClient(base_url="http://example.com", name="test", endpoints=client_endpoints, description="", qos_metrics=client_qos_metrics)
+        client = SDXClient(
+            base_url="http://example.com",
+            name="test",
+            endpoints=client_endpoints,
+            description="",
+            qos_metrics=client_qos_metrics,
+        )
         self.assertEqual(client.qos_metrics, client_qos_metrics)
 
     def test_qos_metrics_invalid_type(self):
@@ -65,7 +82,13 @@ class TestSDXClient(unittest.TestCase):
             },
         ]
         with self.assertRaises(AttributeError):
-            client = SDXClient(base_url="http://example.com", name="test", endpoints=client_endpoints, description="", qos_metrics="invalid string")
+            client = SDXClient(
+                base_url="http://example.com",
+                name="test",
+                endpoints=client_endpoints,
+                description="",
+                qos_metrics="invalid string",
+            )
 
     def test_qos_metrics_min_bw_out_of_range(self):
         """Test setting min_bw with value outside valid range"""
@@ -80,9 +103,21 @@ class TestSDXClient(unittest.TestCase):
             },
         ]
         with self.assertRaises(ValueError) as context:
-            qos_metrics = {"min_bw": {"value": -10, "strict": False}}  # Negative value for min_bw
-            SDXClient(base_url="http://example.com", name="test", endpoints=client_endpoints, description="", qos_metrics=qos_metrics)
-        self.assertEqual(str(context.exception), "qos_metric 'min_bw' value must be between 0 and 100.")
+            qos_metrics = {
+                "min_bw": {"value": -10, "strict": False}
+            }  # Negative value for min_bw
+            SDXClient(
+                base_url="http://example.com",
+                name="test",
+                endpoints=client_endpoints,
+                description="",
+                qos_metrics=qos_metrics,
+            )
+        self.assertEqual(
+            str(context.exception),
+            "qos_metric 'min_bw' value must be between 0 and 100.",
+        )
+
 
 # Run the tests
 if __name__ == "__main__":
