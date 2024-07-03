@@ -1,3 +1,4 @@
+import requests
 import unittest
 from unittest.mock import patch
 from sdxlib.client import SDXClient, SDXException
@@ -13,14 +14,15 @@ Run from the SDXLIB parent directory Using:
 
 class TestSDXClient(unittest.TestCase):
 
-    # API Call Succeeds
-    @patch("sdxlib.client.requests.post")
+    # # API Call Succeeds
+    @patch("requests.post")  # Mock the requests.post function
     def test_create_l2vpn_success(self, mock_post):
-        """Checks that the 'create_l2vpn' method correctly handles a
-        successful API call."""
-        mock_post.return_value.ok = True
-        mock_post.return_value.json.return_value = {"status": "Accepted"}
+        # Set up mock response
+        mock_response = unittest.mock.Mock()
+        mock_response.json.return_value = {"service_id": "123"}
+        mock_post.return_value = mock_response
 
+        # Create SDXClient object with sample data
         client_name = "Test L2VPN"
         client_endpoints = [
             {
@@ -34,49 +36,33 @@ class TestSDXClient(unittest.TestCase):
         ]
 
         client = SDXClient(
-            base_url="http://example.com", name=client_name, endpoints=client_endpoints
+            base_url="https:/api.example.com",
+            name=client_name,
+            endpoints=client_endpoints,
+            description="Test Description",
         )
-        # client.endpoints = [
-        #     {
-        #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-        #         "vlan": "100",
-        #     },
-        #     {
-        #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-        #         "vlan": "200",
-        #     },
-        # ]
-
+        # Call the function and assert the response
         response = client.create_l2vpn()
 
-        self.assertEqual(response, {"status": "Accepted"})
+        self.assertEqual(response, {"service_id": "123"})
 
+        # Verify that requests.post was called with expected URL and payload parts
         mock_post.assert_called_once_with(
-            "http://example.com/l2vpn",
+            "https:/api.example.com/l2vpn/1.0/",
             json={
-                "name": "Test L2VPN",
-                "endpoints": [
-                    {
-                        "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-                        "vlan": "100",
-                    },
-                    {
-                        "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-                        "vlan": "200",
-                    },
-                ],
+                "name": client_name,
+                "endpoints": client_endpoints,
+                "description": "Test Description",
             },
+            timeout=120,
         )
 
-    # API Call Fails
-    @patch("sdxlib.client.requests.post")
-    def test_create_l2vpn_api_failure(self, mock_post):
-        """Checks that the 'create_l2vpn' method raises an
-        'SDXException on API failure."""
-        mock_post.return_value.ok = False
-        mock_post.return_value.status_code = 500
-        mock_post.return_value.text = "Internal Server Error"
+    @patch("requests.post")
+    def test_create_l2vpn_error(self, mock_post):
+        # Set up mock error
+        mock_post.side_effect = requests.exceptions.RequestException("Connection error")
 
+        # Create SDXClient object
         client_name = "Test L2VPN"
         client_endpoints = [
             {
@@ -90,57 +76,17 @@ class TestSDXClient(unittest.TestCase):
         ]
 
         client = SDXClient(
-            base_url="http://example.com", name=client_name, endpoints=client_endpoints
+            base_url="https:/api.example.com/l2vpn/1.0/",
+            name=client_name,
+            endpoints=client_endpoints,
         )
-        # client.endpoints = [
-        #     {
-        #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-        #         "vlan": "100",
-        #     },
-        #     {
-        #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-        #         "vlan": "200",
-        #     },
-        # ]
 
-        with self.assertRaises(SDXException) as context:
-            client.create_l2vpn()
+        # Call the function and assert it returns None
+        response = client.create_l2vpn()
+        self.assertIsNone(response)
 
-        self.assertEqual(context.exception.status_code, 500)
-        self.assertEqual(context.exception.message, "Internal Server Error")
+        # Verify that requests.post was called
         mock_post.assert_called_once()
-
-    # Unit Tests for Name Attribute#
-    # def test_create_l2vpn_name_required(self):
-    #     """Checks that 'name' is provided."""
-    #        client_name = "Test L2VPN"
-    # client_endpoints = [
-    #     {
-    #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-    #         "vlan": "100",
-    #     },
-    #     {
-    #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-    #         "vlan": "200",
-    #     },
-    # ]
-
-    # client = SDXClient(
-    #     base_url="http://example.com", name=client_name, endpoints=client_endpoints
-    # )
-    #     client.endpoints = [
-    #         {
-    #             "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-    #             "vlan": "100",
-    #         },
-    #         {
-    #             "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-    #             "vlan": "200",
-    #         },
-    #     ]
-    #     with self.assertRaises(ValueError) as context:
-    #         client.create_l2vpn()
-    #     self.assertEqual(str(context.exception), "Name attribute is required.")
 
     def test_name_empty_string(self):
         """Checks that empty string is not allowed for 'name' attribute."""
