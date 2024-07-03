@@ -165,9 +165,12 @@ class SDXClient:
         Raises:
         - ValueError: If the description is longer than 255 characters.
         """
-        if value is not None and len(value) > 255:
+        if value is None or not value:
+            self._description = None
+        elif value is not None and len(value) > 255:
             raise ValueError("Description attribute must be less than 256 characters.")
-        self._description = value
+        else:
+            self._description = value
 
     @property
     def notifications(self):
