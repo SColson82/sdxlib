@@ -1,6 +1,8 @@
 import re
 import requests
 from typing import Optional, Dict
+from collections import namedtuple
+from requests.exceptions import RequestException, HTTPError
 
 """
 sdxlib
@@ -451,25 +453,39 @@ class SDXClient:
         value_dict.get("strict", False)
 
     ### Class Methods
+    _request_cache = {}
+
     def create_l2vpn(self):
         """
-        Creates an L2VPN using the provided name and endpoints.
+        Creates an L2VPN using the provided name, endpoints, and
+        optional attributes.
+
+        Sends a JSON request body containing the L2VPN configuration to the
+        L2VPN API and returns the response.
+
+        Args:
+        - name (str, required): Name of the L2VPN
+        - endpoints (list, required): Endpoint configuration. 
+        - description (str, optional): Description of the L2VPN. Defaults to
+        None.
+        - notifications (list, optional): List of notification settings.
+        Defaults to None.
+        -scheduling (dict, optional): Scheduling configuration. Defaults to 
+        None.
+        qos_metrics (dict, optional): Qualit of service metrics. Defaults to
+        None.
 
         Returns:
-        - dict: JSON response from the API if successful.
+        - dict: JSON response from the API containing the service_id and 
+        other attributes if successful.
+        - None: If the request times out or fails for an unknown reason.
 
         Raises:
-        - ValueError: If name or endpoints are not provided
-            or do not meet requirements.
-        - SDXException: If the API request fails.
+        - SDXException: If the API request fails with a known error code
+        and description.
         """
 
-        if self.name is None:
-            raise ValueError("Name attribute is required.")
-        if not self.endpoints:
-            raise ValueError("Endpoints attribute is required.")
-
-        url = f"{self.base_url}/l2vpn"
+        url = f"{self.base_url}/l2vpn/1.0/"
 
         payload = {
             "name": self.name,
@@ -478,12 +494,47 @@ class SDXClient:
                 for endpoint in self.endpoints
             ],
         }
-        response = requests.post(url, json=payload)
 
-        if response.ok:
-            return response.json()
-        else:
-            raise SDXException(status_code=response.status_code, message=response.text)
+        # Add optional attributes if provided.
+        if self.description:
+            payload["description"] = self.description
+        if self.notifications:
+            payload["notifications"] = self.notifications
+        if self.scheduling:
+            payload["scheduling"] = self.scheduling
+        if self.qos_metrics:
+            payload["qos_metrics"] = self.qos_metrics
+
+        # Check cache for existing request with same name and endpoints
+        cache_key = (
+            self.name,
+            tuple(endpoint["port_id"] for endpoint in self.endpoints),
+        )
+        cached_data = self._request_cache.get(cache_key)
+
+        if cached_data:
+            payload, response_json = cached_data
+            return response_json
+
+        url = self.base_url + "/l2vpn/1.0/"
+
+        print(
+            f"L2VPN creation request sent to {url}. It may take several seconds to receive a response."
+        )
+
+        try:
+            response = requests.post(url, json=payload, timeout=120)
+            response.raise_for_status()
+            response_json = response.json()
+            cached_data = (payload, response_json)
+            self._request_cache[cache_key] = cached_data
+            return response_json
+        except RequestException as e:
+            print(f"An error occurred while creating L2VPN: {e}")
+            return None
+        except HTTPError as e:
+            error_msg = response.json().get("description", "Unknown error")
+            raise SDXException(status_code=e.response.status_code, message=error_msg)
 
     def __str__(self):
         """
@@ -545,15 +596,49 @@ if __name__ == "__main__":
             "vlan": "200",
         },
     ]
+    client_description = (
+        ""  # This is an example to demonstrate a L2VPN with optional attributes."
+    )
+    client_notifications = []  # {"email":f"user{i+1}@email.com"} for i in range(10)]
+    client_scheduling = {
+        # "start_time": "2024-07-04T10:00:00Z",
+        # "end_time": "2024-07-05T18:00:00Z"
+    }
+    client_qos_metrics = {
+        # "min_bw": {
+        # "value": 5,
+        # "strict": False
+        # },
+        # "max_delay": {
+        #     "value": 150,
+        #     "strict": True
+        # },
+        # "max_number_oxps": {
+        #     "value": 100,
+        #     "strict": True
+        # }
+    }
 
     client = SDXClient(
-        base_url="http://example.com", name=client_name, endpoints=client_endpoints
+        base_url="http://example.com",
+        name=client_name,
+        endpoints=client_endpoints,
+        description=client_description,
+        notifications=client_notifications,
+        scheduling=client_scheduling,
+        qos_metrics=client_qos_metrics,
     )
 
     try:
-        response = client.endpoints
-        print(response)
+        print(client.name)
+        print(client.endpoints)
+        print(client.description)
+        print(client.notifications)
+        print(client.scheduling)
+        print(client.qos_metrics)
     except ValueError as e:
+        print(f"Error: {e}")
+    except TypeError as e:
         print(f"Error: {e}")
     except SDXException as e:
         print(f"SDX Error: {e.status_code} - {e.message}")
