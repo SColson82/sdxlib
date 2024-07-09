@@ -1,8 +1,9 @@
+import logging
 import re
 import requests
 from typing import Optional, Dict
 from collections import namedtuple
-from requests.exceptions import RequestException, HTTPError
+from requests.exceptions import RequestException, HTTPError, Timeout
 
 """
 sdxlib
@@ -454,6 +455,7 @@ class SDXClient:
 
     ### Class Methods
     _request_cache = {}
+    _logger = logging.getLogger(__name__)
 
     def create_l2vpn(self):
         """
@@ -515,6 +517,8 @@ class SDXClient:
         if cached_data:
             payload, response_json = cached_data
             return response_json
+        
+        self._logger.info(f"L2VPN creation request sent to {url}.")
 
         url = self.base_url + "/l2vpn/1.0/"
 
@@ -530,11 +534,39 @@ class SDXClient:
             self._request_cache[cache_key] = cached_data
             return response_json
         except RequestException as e:
-            print(f"An error occurred while creating L2VPN: {e}")
+            self._logger.error(f"An error occurred while creating L2VPN: {e}")
+            # print(f"An error occurred while creating L2VPN: {e}")
             return None
         except HTTPError as e:
             error_msg = response.json().get("description", "Unknown error")
             raise SDXException(status_code=e.response.status_code, message=error_msg)
+
+    def update_l2vpn(self, service_id, payload):
+        """
+        Edits an existing L2VPN on the SDX Controller.
+
+        Args:
+            service_id (str): The Id of the L2VPN service to edit.
+            payload (dict, optional): A dictionary containing the L2VPN attributes to change.
+                If a key is missing from the payload, the corresponding attribute is assumed unchanged.
+
+        Returns:
+            None: On successful update (201 status code). 
+            dict: A dictionary containing an error message on failure.
+
+        Raises:
+            Timeout: IF the request times out.
+            RequestException: For other request errors.
+            SDXException: For errors from the L2VPN API.
+        """
+
+        url = self.base_url + "/l2vpn/1.0/" + service_id
+
+        try:
+            response = requests.patch(url, json=payload, timeout=120)
+            response.raise_for_status() # Raise exception for non-200 status codes
+
+        
 
     def __str__(self):
         """
