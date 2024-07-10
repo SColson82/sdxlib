@@ -590,8 +590,36 @@ class SDXClient:
             error_msg = response.json().get("description", "Unknown error")
             raise SDXException(status_code=e.response.status_code, message=error_msg)
 
-    
+
+    def retrieve_l2vpn(self, service_id):
+        """
+        Retrieves an L2VPN by its service_id.
+
+        Args:
+            service_id (str): The UUID of the specific L2VPN to retrieve.
+
+        Returns:
+            dict: A dictionary containing the L2VPN information (service_id as key) or None
+                if the L2VPN is not found or an error occurs.
+
+        Raises:
+            SDXException: If the API request fails with a know error code and description.
+        """
+
+        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+
+        try:
+            response = requests.get(url, verify=True, timeout=120)
+            response.raise_for_status()
+            return response.json() if response.content else None
+        except RequestException as e:
+            print(f"An error occurred while retrieving L2VPN: {e}")
+            return None
+        except HTTPError as e:
+            error_msg = response.json().get("description", "Unknown error")
+            raise SDXException(stats_code=e.response.status_code, message=error_msg)
         
+    
 
     def __str__(self):
         """
