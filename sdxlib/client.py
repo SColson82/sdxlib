@@ -535,13 +535,14 @@ class SDXClient:
             cached_data = (payload, response_json)
             self._request_cache[cache_key] = cached_data
             return response_json
+        except HTTPError as e:
+            error_msg = response.json().get("description", "Unknown error")
+            raise SDXException(status_code=e.response.status_code, message=error_msg)
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
             # print(f"An error occurred while creating L2VPN: {e}")
             return None
-        except HTTPError as e:
-            error_msg = response.json().get("description", "Unknown error")
-            raise SDXException(status_code=e.response.status_code, message=error_msg)
+
 
     def update_l2vpn(self, service_id, attribute, value):
         """
@@ -583,12 +584,12 @@ class SDXClient:
             response = requests.patch(url, json=payload, verify=True, timeout=120)
             response.raise_for_status() # Raise exception for non-200 status codes
             return response.json()
-        except RequestException as e:
-            print (f"An error occurred while updating L2VPN: {e}")
-            return None
         except HTTPError as e:
             error_msg = response.json().get("description", "Unknown error")
             raise SDXException(status_code=e.response.status_code, message=error_msg)
+        except RequestException as e:
+            print (f"An error occurred while updating L2VPN: {e}")
+            return None
 
 
     def retrieve_l2vpn(self, service_id):
@@ -612,12 +613,13 @@ class SDXClient:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
             return response.json() if response.content else None
-        except RequestException as e:
-            print(f"An error occurred while retrieving L2VPN: {e}")
-            return None
         except HTTPError as e:
             error_msg = response.json().get("description", "Unknown error")
             raise SDXException(stats_code=e.response.status_code, message=error_msg)
+        except RequestException as e:
+            print(f"An error occurred while retrieving L2VPN: {e}")
+            return None
+
         
     def retrieve_all_l2vpns(self, archived_date="0"):
         """
@@ -645,12 +647,39 @@ class SDXClient:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
             return response.json() if response.content else {}
-        except RequestException as e:
-            print(f"An error occurred while retrieving L2VPN: {e}")
-            return None
         except HTTPError as e:
             error_msg = response.json().get("description", "Unknown error")
             raise SDXException(stats_code=e.response.status_code, message=error_msg)
+        except RequestException as e:
+            print(f"An error occurred while retrieving L2VPN: {e}")
+            return None
+
+        
+    def delete_l2vpn(self, service_id):
+        """
+        Deletes an L2VPN based on the provided service_id.
+
+        Args:
+            service_id (str): The UUID of the L2VPN to delete.
+
+        Raises: 
+            SDXException: If the API request fails with a known error code and desction.
+        """
+        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+
+        try:
+            response = requests.delete(url, verify=True, timeout=120)
+            response.raise_for_status()
+            #return response.json() if response.content else {}
+        except HTTPError as e:
+            error_msg = response.json().get("description", "Unknown error")
+            raise SDXException(stats_code=e.response.status_code, message=error_msg)
+        except RequestException as e:
+            print(f"An error occurred while retrieving L2VPN: {e}")
+            return SDXException("Error deleteing L2VPN", cause=e)
+        
+        
+        return None
 
     def __str__(self):
         """
