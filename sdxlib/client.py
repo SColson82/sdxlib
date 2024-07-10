@@ -31,6 +31,8 @@ class SDXClient:
         r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
     )
 
+    VERSION = "1.0.0"
+
     def __init__(
         self,
         base_url,
@@ -487,7 +489,7 @@ class SDXClient:
         and description.
         """
 
-        url = f"{self.base_url}/l2vpn/1.0/"
+        url = f"{self.base_url}/l2vpn/{self.VERSION}/"
 
         payload = {
             "name": self.name,
@@ -520,7 +522,7 @@ class SDXClient:
         
         self._logger.info(f"L2VPN creation request sent to {url}.")
 
-        url = self.base_url + "/l2vpn/1.0/"
+        #url = self.base_url + "/l2vpn/{self.VERSION}/"
 
         print(
             f"L2VPN creation request sent to {url}. It may take several seconds to receive a response."
@@ -541,31 +543,54 @@ class SDXClient:
             error_msg = response.json().get("description", "Unknown error")
             raise SDXException(status_code=e.response.status_code, message=error_msg)
 
-    def update_l2vpn(self, service_id, payload):
+    def update_l2vpn(self, service_id, attribute, value):
         """
-        Edits an existing L2VPN on the SDX Controller.
+        Updates an existing L2VPN identified by its service_id.
+
+        Allows modifying any attribute from the request JSON or the state attribute
+        from the response JSON.
 
         Args:
-            service_id (str): The Id of the L2VPN service to edit.
-            payload (dict, optional): A dictionary containing the L2VPN attributes to change.
-                If a key is missing from the payload, the corresponding attribute is assumed unchanged.
+            service_id (str): The UUID of the L2VPN service to update.
+            attribute (str): The attribute to modify (from request or response JSON).
+            value: The new value to assign to the specified attribute.
 
         Returns:
-            None: On successful update (201 status code). 
-            dict: A dictionary containing an error message on failure.
+            dict: The updated JSON response from the API, including the service_id
+                and any modified attributes.
+            None: If the request fails due to errors or timeouts.
 
         Raises:
-            Timeout: IF the request times out.
-            RequestException: For other request errors.
-            SDXException: For errors from the L2VPN API.
+            ValueError: If an invalid update is attempted (modifying service_id
+                or setting state to a non-lowercase 'enabled' or 'disabled')
+            SDXException: If the API request fails with a known error code
+                and description.
         """
 
-        url = self.base_url + "/l2vpn/1.0/" + service_id
+        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+
+        payload = {"service_id": service_id}
+
+        if attribute not in ["service_id", "state"]:
+            payload[attribute] = value
+        else:
+            if attribute == "state" and value.lower() in ("enabled", "disabled"):
+                payload[attribute] = value.lower()
+            else:
+                raise ValueError("Invalid update: Cannot modify service_id. The 'state' attribute can only be changed to 'enabled' or 'disabled'.")
 
         try:
-            response = requests.patch(url, json=payload, timeout=120)
+            response = requests.patch(url, json=payload, verify=True, timeout=120)
             response.raise_for_status() # Raise exception for non-200 status codes
+            return response.json()
+        except RequestException as e:
+            print (f"An error occurred while updating L2VPN: {e}")
+            return None
+        except HTTPError as e:
+            error_msg = response.json().get("description", "Unknown error")
+            raise SDXException(status_code=e.response.status_code, message=error_msg)
 
+    
         
 
     def __str__(self):
@@ -674,3 +699,20 @@ if __name__ == "__main__":
         print(f"Error: {e}")
     except SDXException as e:
         print(f"SDX Error: {e.status_code} - {e.message}")
+
+    # # Update description
+    # response_json = client.update_l2vpn(
+    #     "123e4567-e89b-12d3-a456-426655440000", "description", "New description"
+    # )
+
+    # # Enable the L2VPN
+    # response_json = client.update_l2vpn(
+    #     "123e4567-e89b-12d3-a456-426655440000", "state", "enabled"
+    # )
+
+    # # Try updating an invalid attribute (service_id)
+    # try:
+    #     response_json = client.update_l2vpn(
+    #         "123e4567-e89b-12d3-a456-426655440000", "service_id", "new-id"
+    #     )
+    # except ValueError
