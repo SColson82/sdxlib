@@ -619,7 +619,38 @@ class SDXClient:
             error_msg = response.json().get("description", "Unknown error")
             raise SDXException(stats_code=e.response.status_code, message=error_msg)
         
-    
+    def retrieve_all_l2vpns(self, archived_date="0"):
+        """
+        Retrieves all L2VPNs based on the archived_date parameter (defaults to active).
+
+        Args:
+            archived_date (str, optional): An ISO8601 formatted timestamp string representing
+                the archived_date to filter L2VPNs. Defaults to "0" (active).
+
+        Returns:
+            dict: A dictionary with L2VPN information (service_id as key) or an empty
+                dictionary if no L2VPNs are found.
+
+        Raises:
+            SDXException: If the API request fails with a known error code and description.
+            ValueError: If an invalid archived_date format is provided.
+        """    
+
+        if not self._is_valid_iso8601(archived_date):
+            raise ValueError("Invalid archived_date parameter. Must be a valid ISO8601 formatted timestamp.")
+        
+        url = f"{self.base_url}/l2vpn/{self.VERSION}/{archived_date}"
+
+        try:
+            response = requests.get(url, verify=True, timeout=120)
+            response.raise_for_status()
+            return response.json() if response.content else {}
+        except RequestException as e:
+            print(f"An error occurred while retrieving L2VPN: {e}")
+            return None
+        except HTTPError as e:
+            error_msg = response.json().get("description", "Unknown error")
+            raise SDXException(stats_code=e.response.status_code, message=error_msg)
 
     def __str__(self):
         """
