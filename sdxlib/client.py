@@ -44,21 +44,16 @@ class SDXClient:
         scheduling=None,
         qos_metrics=None,
     ):
-        """
-        Initializes an instance of SDXClient.
+        """Initializes an instance of SDXClient.
 
         Args:
         - base_url (str): The base URL of the SDX API.
         - name (str): The name of the SDX client.
-        - endpoints (lsit): List of endpoints associated with the client.
-        - description (str, optional): Description of
-            the client (default: None).
-        - notifications (list, optional): List of
-            notification settings (default: None).
-        - scheduling (dict, optional): Scheduling
-            configuration (default: None).
-        - qos_metrics (dict, optional): Quality
-            of service metrics (default: None).
+        - endpoints (list): List of endpoints associated with the client.
+        - description (str, optional): Description of the client (default: None).
+        - notifications (list, optional): List of notification settings (default: None).
+        - scheduling (dict, optional): Scheduling configuration (default: None).
+        - qos_metrics (dict, optional): Quality of service metrics (default: None).
         """
         self.base_url = base_url
         self.name = name
@@ -71,30 +66,12 @@ class SDXClient:
 
     @property
     def name(self):
-        """
-        Getter method for retrieving the name of the L2VPN.
-
-        Returns:
-        - str: The name of the L2VPN.
-
-        Raises:
-        - None
-        """
+        """Getter"""
         return self._name
 
     @name.setter
     def name(self, value):
-        """
-        Setter method for setting the name of the L2VPN.
-
-        Args:
-        - value (str): The name to be set for the L2VPN.
-
-        Raises:
-        - TypeError: If the provided name is not a string.
-        - ValueError: If the provided name exceeds
-            50 characters or is an empty string.
-        """
+        """Setter"""
         if not isinstance(value, str) or not value or len(value) > 50:
             raise ValueError(
                 "Name must be a non-empty string with maximum 50 characters."
@@ -103,74 +80,22 @@ class SDXClient:
 
     @property
     def endpoints(self):
-        """
-        Getter method for retrieving the list of endpoints.
-
-        Returns:
-        - list: The list of endpoints.
-
-        Raises:
-        - None
-        """
+        """Getter"""
         return self.__endpoints
 
     @endpoints.setter
     def endpoints(self, value):
-        """
-        Setter method for setting the list of endpoints.
-
-        Args:
-        - value (list): The list of endpoints to be set.
-
-        Raises:
-        - TypeError:
-            - If the provided endpoints are not a list.
-            - If the endpoints list contains non-dictionary elements.
-            - If the VLAN value is not a string.
-        - ValueError:
-            - If the endpoints list has less than 2 entries.
-            - If any endpoint dictionary does not
-                contain a non-empty 'port_id' key.
-            - If the port_id value does not follow
-                the format: 'urn:sdx:port:<oxp_url>:<node_name>:<port_name>'
-            - If any endpoint dictionary does not
-                contain a non-empty 'vlan' key.
-            - If any vlan value is other than an integer
-                string, a valid range format, or any of
-                    the values 'any', 'all', or 'untagged'.
-            - If the vlan value is an integer string that
-                is not between 1 and 4095 inclusive.
-            - If the vlan value 'all' is used with any
-                other value but 'all'.
-            - If a range is used for the vlan value with any
-                other value but the same range value.
-            - If the vlan range value does not follow the
-                format 'VLAN ID 1:VLAN ID2' where
-                    1 <= VLAN ID1 < VLAN ID2 <= 4095.
-        """
+        """Setter"""
         self.__endpoints = self._validate_endpoints(value)
 
     @property
     def description(self):
-        """
-        Getter for the description attribute.
-
-        Returns:
-        - str: The current description.
-        """
+        """Getter"""
         return self._description
 
     @description.setter
     def description(self, value):
-        """
-        Setter for the description attribute.
-
-        Args:
-        - value (str): The description of the client.
-
-        Raises:
-        - ValueError: If the description is longer than 255 characters.
-        """
+        """Setter"""
         if value is None or not value:
             self._description = None
         elif value is not None and len(value) > 255:
@@ -180,10 +105,12 @@ class SDXClient:
 
     @property
     def notifications(self):
+        """Getter"""
         return self._notifications
 
     @notifications.setter
     def notifications(self, value):
+        """Setter"""
         if value is None or not value:
             self._notifications = None
         else:
@@ -191,26 +118,12 @@ class SDXClient:
 
     @property
     def scheduling(self):
-        """
-        Getter for the scheduling attribute.
-
-        Returns:
-            dict: The current scheduling configuration or None if not set.
-        """
+        """Getter"""
         return self._scheduling
 
     @scheduling.setter
     def scheduling(self, value):
-        """
-        Setter for the scheduling attribute.
-
-        Args:
-            value(dict, optional): Scheduling configuration dictionary.
-
-        Raises:
-            TypeError: If the provided value is not a dictionary.
-            ValueError: If the provided scheduling configuration is invalid.
-        """
+        """Setter"""
         if value is None or not value:
             self._scheduling = None
             return
@@ -222,11 +135,12 @@ class SDXClient:
 
     @property
     def qos_metrics(self):
+        """Getter"""
         return self._qos_metrics
 
     @qos_metrics.setter
     def qos_metrics(self, value: Optional[Dict[str, Dict[str, int]]]):
-
+        """Setter"""
         if value is None or not value:
             self._qos_metrics = None
             return
@@ -774,81 +688,3 @@ class SDXException(Exception):
         self.status_code = status_code
         # self.message = message
         self.method_messages = method_messages
-
-
-if __name__ == "__main__":
-    # Example usage
-    client_name = "Test L2VPN"
-    client_endpoints = [
-        {
-            "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-            "vlan": "100",
-        },
-        {
-            "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-            "vlan": "200",
-        },
-    ]
-    client_description = (
-        ""  # This is an example to demonstrate a L2VPN with optional attributes."
-    )
-    client_notifications = []  # {"email":f"user{i+1}@email.com"} for i in range(10)]
-    client_scheduling = {
-        # "start_time": "2024-07-04T10:00:00Z",
-        # "end_time": "2024-07-05T18:00:00Z"
-    }
-    client_qos_metrics = {
-        # "min_bw": {
-        # "value": 5,
-        # "strict": False
-        # },
-        # "max_delay": {
-        #     "value": 150,
-        #     "strict": True
-        # },
-        # "max_number_oxps": {
-        #     "value": 100,
-        #     "strict": True
-        # }
-    }
-
-    client = SDXClient(
-        base_url="http://example.com",
-        name=client_name,
-        endpoints=client_endpoints,
-        description=client_description,
-        notifications=client_notifications,
-        scheduling=client_scheduling,
-        qos_metrics=client_qos_metrics,
-    )
-
-    try:
-        print(client.name)
-        print(client.endpoints)
-        print(client.description)
-        print(client.notifications)
-        print(client.scheduling)
-        print(client.qos_metrics)
-    except ValueError as e:
-        print(f"Error: {e}")
-    except TypeError as e:
-        print(f"Error: {e}")
-    except SDXException as e:
-        print(f"SDX Error: {e.status_code} - {e.message}")
-
-    # # Update description
-    # response_json = client.update_l2vpn(
-    #     "123e4567-e89b-12d3-a456-426655440000", "description", "New description"
-    # )
-
-    # # Enable the L2VPN
-    # response_json = client.update_l2vpn(
-    #     "123e4567-e89b-12d3-a456-426655440000", "state", "enabled"
-    # )
-
-    # # Try updating an invalid attribute (service_id)
-    # try:
-    #     response_json = client.update_l2vpn(
-    #         "123e4567-e89b-12d3-a456-426655440000", "service_id", "new-id"
-    #     )
-    # except ValueError
