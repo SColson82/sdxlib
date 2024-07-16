@@ -5,7 +5,7 @@ import requests
 from typing import Optional, Dict
 from requests.exceptions import RequestException, HTTPError, Timeout
 
-from sdx_exception import SDXException
+from sdxlib.sdx_exception import SDXException
 
 """sdxlib
 
@@ -204,7 +204,7 @@ class SDXClient:
                 raise ValueError(
                     "All endpoints must have the same VLAN value if one endpoint is 'all' or a range."
                 )
-            
+
             if has_special_vlan and (
                 len(vlans) > 1 or has_single_vlan or has_vlan_range
             ):
@@ -277,7 +277,6 @@ class SDXClient:
 
         return endpoint_dict
 
-
     # Notifications Methods
     @staticmethod
     def is_valid_email(email):
@@ -295,17 +294,17 @@ class SDXClient:
         return re.match(email_regex, email) is not None
 
     def _validate_notifications(self, notifications):
-        """Validates the provided list of notification settings.
+        """Validates the notifications attribute.
 
         Args:
-            notifications (list): List of notification settings.
+            notifications (list): List of dictionaries representing notifications.
 
         Returns:
-            list: Validated list of notification settings.
+            list: Validated list of notifications.
 
         Raises:
             TypeError: If notifications is not a list.
-            ValueError: If notifications list is empty or contains invalid email addresses.
+            ValueError: If notifications exceed 10 dictionaries or contain invalid emails.
         """
         if notifications is None:
             return None
@@ -313,14 +312,17 @@ class SDXClient:
             raise ValueError("Notifications must be provided as a list.")
         if len(notifications) > 10:
             raise ValueError("Notifications can contain at most 10 email addresses.")
-        if any(
-            not isinstance(n, dict)
-            or "email" not in n
-            or not self.is_valid_email(n["email"])
-            for n in notifications
-        ):
-            raise ValueError("Invalid notification format or email address.")
-        return notifications
+        
+        validated_notifications = []
+        for notification in notifications:
+            if not isinstance(notification, dict):
+                raise ValueError("Each notification must be a dictionary.")
+            if "email" not in notification:
+                raise ValueError("Each notification dictionary must contain a key 'email'.")
+            if not self.is_valid_email(notification["email"]):
+                raise ValueError(f"Invalid email address: {notification["email"]}")
+            validated_notifications.append(notification)
+        return validated_notifications
 
     # Scheduling Methods
     def _validate_scheduling(self, scheduling):
@@ -475,7 +477,7 @@ class SDXClient:
             response = requests.post(url, json=payload, timeout=120)
             response.raise_for_status()
             response_json = response.json()
-            cached_data = (payload, response)  
+            cached_data = (payload, response)
             self._request_cache[cache_key] = cached_data
             self._logger.info(f"L2VPN creation request sent to {url}.")
             return response_json
@@ -578,7 +580,7 @@ class SDXClient:
             }
             raise SDXException(
                 status_code=e.response.status_code, method_messages=method_messages
-            )  
+            )
         except RequestException as e:
             print(f"An error occurred while retrieving L2VPN: {e}")
             return None
