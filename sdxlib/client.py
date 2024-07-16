@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 import requests
@@ -31,13 +32,13 @@ class SDXClient:
         r"^urn:sdx:port:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+:[a-zA-Z0-9.,-_\/]+$"
     )
 
-    VERSION = "1.0.0"
+    VERSION = "1.0"
 
     def __init__(
         self,
-        base_url,
-        name,
-        endpoints,
+        base_url=None,
+        name=None,
+        endpoints=None,
         description=None,
         notifications=None,
         scheduling=None,
@@ -341,8 +342,6 @@ class SDXClient:
 
         return endpoint_dict
 
-    # def update_endpoints(self, endpoints):
-    #     self.endpoints = endpoints
 
     # Notifications Methods
     @staticmethod
@@ -469,18 +468,18 @@ class SDXClient:
 
         Args:
         - name (str, required): Name of the L2VPN
-        - endpoints (list, required): Endpoint configuration. 
+        - endpoints (list, required): Endpoint configuration.
         - description (str, optional): Description of the L2VPN. Defaults to
         None.
         - notifications (list, optional): List of notification settings.
         Defaults to None.
-        -scheduling (dict, optional): Scheduling configuration. Defaults to 
+        -scheduling (dict, optional): Scheduling configuration. Defaults to
         None.
         qos_metrics (dict, optional): Qualit of service metrics. Defaults to
         None.
 
         Returns:
-        - dict: JSON response from the API containing the service_id and 
+        - dict: JSON response from the API containing the service_id and
         other attributes if successful.
         - None: If the request times out or fails for an unknown reason.
 
@@ -489,8 +488,7 @@ class SDXClient:
         and description.
         """
 
-        url = f"{self.base_url}/l2vpn/{self.VERSION}/"
-
+        url = f"{self.base_url}/l2vpn/{self.VERSION}"
         payload = {
             "name": self.name,
             "endpoints": [
@@ -517,12 +515,10 @@ class SDXClient:
         cached_data = self._request_cache.get(cache_key)
 
         if cached_data:
-            payload, response_json = cached_data
+            _, response_json = cached_data
             return response_json
-        
-        self._logger.info(f"L2VPN creation request sent to {url}.")
 
-        #url = self.base_url + "/l2vpn/{self.VERSION}/"
+        self._logger.info(f"L2VPN creation request sent to {url}.")
 
         print(
             f"L2VPN creation request sent to {url}. It may take several seconds to receive a response."
@@ -532,11 +528,11 @@ class SDXClient:
             response = requests.post(url, json=payload, timeout=120)
             response.raise_for_status()
             response_json = response.json()
-            cached_data = (payload, response_json)
+            cached_data = (payload, response)  
             self._request_cache[cache_key] = cached_data
+            self._logger.info(f"L2VPN creation request sent to {url}.")
             return response_json
         except HTTPError as e:
-            error_msg = response.json().get("description", "Unknown error")
             method_messages = {
                 201: "L2VPN Service Created",
                 400: "Request does not have a valid JSON or body is incomplete/incorrect",
@@ -545,14 +541,16 @@ class SDXClient:
                 409: "L2VPN Service already exists",
                 410: "Can't fulfill the strict QoS requirements",
                 411: "Scheduling not possible",
-                422: "Attribute not supported by the SDX-LC/OXPO",               
+                422: "Attribute not supported by the SDX-LC/OXPO",
             }
-            raise SDXException(status_code=e.response.status_code, message=error_msg, method_messages=method_messages)
+            print(f"Mocked server response:\n {e.response.text}")
+            raise SDXException(
+                status_code=e.response.status_code, method_messages=method_messages
+            )
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
-            # print(f"An error occurred while creating L2VPN: {e}")
-            return None
-
+            print(f"An error occurred while creating L2VPN: {e}")
+            return e
 
     def update_l2vpn(self, service_id, attribute, value):
         """
@@ -578,7 +576,8 @@ class SDXClient:
                 and description.
         """
 
-        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+        # url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+        url = f"{self.base_url}/{service_id}"
 
         payload = {"service_id": service_id}
 
@@ -588,14 +587,16 @@ class SDXClient:
             if attribute == "state" and value.lower() in ("enabled", "disabled"):
                 payload[attribute] = value.lower()
             else:
-                raise ValueError("Invalid update: Cannot modify service_id. The 'state' attribute can only be changed to 'enabled' or 'disabled'.")
+                raise ValueError(
+                    "Invalid update: Cannot modify service_id. The 'state' attribute can only be changed to 'enabled' or 'disabled'."
+                )
 
         try:
             response = requests.patch(url, json=payload, verify=True, timeout=120)
-            response.raise_for_status() # Raise exception for non-200 status codes
+            response.raise_for_status()  # Raise exception for non-200 status codes
             return response.json()
         except HTTPError as e:
-            error_msg = response.json().get("description", "Unknown error")
+            # error_msg = response.json().get("description", "Unknown error")
             method_messages = {
                 201: "L2VPN Service Modified",
                 400: "Request does not have a valid JSON or body is incomplete/incorrect",
@@ -606,11 +607,12 @@ class SDXClient:
                 410: "Can't fulfill the strict QoS requirements",
                 411: "Scheduling not possible",
             }
-            raise SDXException(status_code=e.response.status_code, message=error_msg, method_messages=method_messages)
+            raise SDXException(
+                status_code=e.response.status_code, method_messages=method_messages
+            )  # message=error_msg, method_messages=method_messages)
         except RequestException as e:
-            print (f"An error occurred while updating L2VPN: {e}")
+            print(f"An error occurred while updating L2VPN: {e}")
             return None
-
 
     def retrieve_l2vpn(self, service_id):
         """
@@ -627,25 +629,25 @@ class SDXClient:
             SDXException: If the API request fails with a know error code and description.
         """
 
-        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+        url = f"{self.base_url}/{service_id}"  # l2vpn/{self.VERSION}/{service_id}"
 
         try:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
             return response.json() if response.content else None
         except HTTPError as e:
-            error_msg = response.json().get("description", "Unknown error")
             method_messages = {
                 200: "OK",
                 401: "Not Authorized",
-                404: "Service ID not found",                
+                404: "Service ID not found",
             }
-            raise SDXException(status_code=e.response.status_code, message=error_msg, method_messages=method_messages)
+            raise SDXException(
+                status_code=e.response.status_code, method_messages=method_messages
+            )  
         except RequestException as e:
             print(f"An error occurred while retrieving L2VPN: {e}")
             return None
 
-        
     def retrieve_all_l2vpns(self, archived_date="0"):
         """
         Retrieves all L2VPNs based on the archived_date parameter (defaults to active).
@@ -661,11 +663,13 @@ class SDXClient:
         Raises:
             SDXException: If the API request fails with a known error code and description.
             ValueError: If an invalid archived_date format is provided.
-        """    
+        """
 
         if not self._is_valid_iso8601(archived_date):
-            raise ValueError("Invalid archived_date parameter. Must be a valid ISO8601 formatted timestamp.")
-        
+            raise ValueError(
+                "Invalid archived_date parameter. Must be a valid ISO8601 formatted timestamp."
+            )
+
         url = f"{self.base_url}/l2vpn/{self.VERSION}/{archived_date}"
 
         try:
@@ -675,14 +679,17 @@ class SDXClient:
         except HTTPError as e:
             error_msg = response.json().get("description", "Unknown error")
             method_messages = {
-                200: "OK",                  
+                200: "OK",
             }
-            raise SDXException(status_code=e.response.status_code, message=error_msg, method_messages=method_messages)
+            raise SDXException(
+                status_code=e.response.status_code,
+                message=error_msg,
+                method_messages=method_messages,
+            )
         except RequestException as e:
             print(f"An error occurred while retrieving L2VPN: {e}")
             return None
 
-        
     def delete_l2vpn(self, service_id):
         """
         Deletes an L2VPN based on the provided service_id.
@@ -690,7 +697,7 @@ class SDXClient:
         Args:
             service_id (str): The UUID of the L2VPN to delete.
 
-        Raises: 
+        Raises:
             SDXException: If the API request fails with a known error code and desction.
         """
         url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
@@ -698,20 +705,23 @@ class SDXClient:
         try:
             response = requests.delete(url, verify=True, timeout=120)
             response.raise_for_status()
-            #return response.json() if response.content else {}
+            # return response.json() if response.content else {}
         except HTTPError as e:
             error_msg = response.json().get("description", "Unknown error")
             method_messages = {
                 201: "L2VPN Deleted",
                 401: "Not Authorized",
-                404: "L2VPN Service ID provided does not exist",                
+                404: "L2VPN Service ID provided does not exist",
             }
-            raise SDXException(status_code=e.response.status_code, message=error_msg, method_messages=method_messages)
+            raise SDXException(
+                status_code=e.response.status_code,
+                message=error_msg,
+                method_messages=method_messages,
+            )
         except RequestException as e:
             print(f"An error occurred while retrieving L2VPN: {e}")
             return SDXException("Error deleteing L2VPN", cause=e)
-        
-        
+
         return None
 
     def __str__(self):
@@ -745,7 +755,9 @@ class SDXException(Exception):
                 update_l2vpn).
     """
 
-    def __init__(self, status_code, message, method_messages=None):
+    def __init__(
+        self, status_code, method_messages=None
+    ):  # message, method_messages=None):
         """
         Initializes an SDXException with status code and message.
 
@@ -758,10 +770,11 @@ class SDXException(Exception):
         Raises:
             None
         """
-        super().__init__(f"Error {status_code}: {message}")
+        super().__init__(f"Error {status_code}")  #: {message}")
         self.status_code = status_code
-        self.message = message
+        # self.message = message
         self.method_messages = method_messages
+
 
 if __name__ == "__main__":
     # Example usage
