@@ -70,7 +70,9 @@ class SDXClient:
     @name.setter
     def name(self, value):
         """Setter for name attribute."""
-        if value is not None and (not isinstance(value, str) or not value or len(value) > 50):
+        if value is not None and (
+            not isinstance(value, str) or not value or len(value) > 50
+        ):
             raise ValueError(
                 "Name must be a non-empty string with maximum 50 characters."
             )
@@ -311,18 +313,20 @@ class SDXClient:
             raise ValueError("Notifications must be provided as a list.")
         if len(notifications) > 10:
             raise ValueError("Notifications can contain at most 10 email addresses.")
-        
+
         validated_notifications = []
         for notification in notifications:
             if not isinstance(notification, dict):
                 raise ValueError("Each notification must be a dictionary.")
             if "email" not in notification:
-                raise ValueError("Each notification dictionary must contain a key 'email'.")
+                raise ValueError(
+                    "Each notification dictionary must contain a key 'email'."
+                )
             if not self.is_valid_email(notification["email"]):
                 raise ValueError(f"Invalid email address: {notification['email']}")
             validated_notifications.append(notification)
         return validated_notifications
-    
+
     def _is_valid_iso8601(self, timestamp):
         """Checks if the provided string is a valid ISO8601 formatted timestamp."""
         timestamp_pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"
@@ -341,27 +345,29 @@ class SDXClient:
         """
         if scheduling is None:
             return
-        
-        if not isinstance(scheduling,dict):
+
+        if not isinstance(scheduling, dict):
             raise TypeError("Scheduling must be a dictionary.")
-        
+
         valid_keys = {"start_time", "end_time"}
         for key in scheduling:
             if key not in valid_keys:
                 raise ValueError(f"Invalid scheduling key: {key}")
-            
+
             time = scheduling[key]
             if not isinstance(time, str):
                 raise TypeError(f"{key} must be a string.")
             if not self._is_valid_iso8601(time):
-                raise ValueError(f"Invalid '{key}' format. Use ISO8601 format (YYYY-MM-DDTHH:mm:SSZ).")
-            
+                raise ValueError(
+                    f"Invalid '{key}' format. Use ISO8601 format (YYYY-MM-DDTHH:mm:SSZ)."
+                )
+
         if "start_time" in scheduling and "end_time" in scheduling:
             if scheduling["end_time"] <= scheduling["start_time"]:
                 raise ValueError("End time must be after start time.")
-            
+
         return scheduling
-    
+
     # QOS Metrics Methods
     def _validate_qos_metric(self, qos_metrics):
         """Validates the provided quality of service metrics.
@@ -375,7 +381,7 @@ class SDXClient:
         """
         if qos_metrics is None:
             return
-        
+
         if not isinstance(qos_metrics, dict):
             raise TypeError("QoS metrics must be a dictionary.")
 
@@ -389,9 +395,7 @@ class SDXClient:
 
     def _validate_qos_metric_value(self, key, value_dict):
         if "value" not in value_dict:
-            raise ValueError(
-                f"Missing required key 'value' in QoS metric for '{key}'"
-            )
+            raise ValueError(f"Missing required key 'value' in QoS metric for '{key}'")
         if not isinstance(value_dict["value"], int):
             raise TypeError("QoS value for '{key}' must be an integer.")
         if "strict" in value_dict and not isinstance(value_dict["strict"], bool):
@@ -488,7 +492,10 @@ class SDXClient:
             error_message = method_messages.get(status_code, "Unknown error occurred.")
             print(f"Mocked server response:\n {e.response.text}")
             raise SDXException(
-                status_code=status_code, method_messages=method_messages, message=error_message)
+                status_code=status_code,
+                method_messages=method_messages,
+                message=error_message,
+            )
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
             print(f"An error occurred while creating L2VPN: {e}")
@@ -540,7 +547,9 @@ class SDXClient:
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
             raise SDXException(
-                status_code=status_code, method_messages=method_messages, message=error_message
+                status_code=status_code,
+                method_messages=method_messages,
+                message=error_message,
             )
         except RequestException as e:
             logging.error(f"Failed to update L2VPN: {e}")
@@ -564,7 +573,7 @@ class SDXClient:
         try:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
-            return response.json() 
+            return response.json()
         except HTTPError as e:
             status_code = e.response.status_code
             method_messages = {
@@ -574,7 +583,9 @@ class SDXClient:
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
             raise SDXException(
-                status_code=status_code, method_messages=method_messages, message=error_message
+                status_code=status_code,
+                method_messages=method_messages,
+                message=error_message,
             )
         except RequestException as e:
             logging.error(f"Failed to retrieve L2VPN: {e}")
@@ -607,7 +618,7 @@ class SDXClient:
         try:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
-            return response.json() 
+            return response.json()
         except HTTPError as e:
             status_code = e.response.status_code
             method_messages = {
@@ -615,7 +626,9 @@ class SDXClient:
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
             raise SDXException(
-                status_code=status_code, method_messages=method_messages, message=error_message
+                status_code=status_code,
+                method_messages=method_messages,
+                message=error_message,
             )
         except RequestException as e:
             logging.error(f"Failed to retrieve L2VPN(s): {e}")

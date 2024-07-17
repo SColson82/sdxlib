@@ -17,10 +17,10 @@ if __name__ == "__main__":
     client_description = (
         ""  # This is an example to demonstrate a L2VPN with optional attributes."
     )
-    client_notifications = []  #{"email":f"user{i+1}@email.com"} for i in range(10)]
+    client_notifications = []  # {"email":f"user{i+1}@email.com"} for i in range(10)]
     client_scheduling = {
         "start_time": "2024-07-04T10:00:00Z",
-        "end_time": "2024-07-05T18:00:00Z"
+        "end_time": "2024-07-05T18:00:00Z",
     }
     client_qos_metrics = {
         # "min_bw": {
@@ -98,3 +98,10 @@ if __name__ == "__main__":
     #     print(f"Validation error: {e}")
     # except SDXException as e:
     #     print(f"SDX error: {e}")
+
+    # client = SDXClient(base_url="http://example.com", version="v1")
+    # try:
+    #     result = client.delete_l2vpn("c73da8e1-5d03-4620-a1db-7cdf23e8978c")
+    #     print(result)
+    # except SDXException as e:
+    #     print(f"Error: {e.message}")

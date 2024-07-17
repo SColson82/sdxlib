@@ -22,5 +22,7 @@ class SDXException(Exception):
         """
         self.status_code = status_code
         self.method_messages = method_messages
-        self.message = message or (method_messages.get(status_code) if method_messages else "")
+        self.message = message or (
+            method_messages.get(status_code) if method_messages else ""
+        )
         super().__init__(self.message)
