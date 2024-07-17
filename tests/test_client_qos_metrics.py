@@ -1,5 +1,5 @@
 import unittest
-from sdxlib.client import SDXClient
+from sdxlib.sdx_client import SDXClient
 
 
 class TestSDXClient(unittest.TestCase):
