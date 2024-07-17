@@ -1,0 +1,3 @@
+In scheduling, start_time and end_time should both be after whatever time it is right now. 
+Add functionality to get_all_l2vpns to accept a broader iso8601 or take a (1) for all archived objects.
+Double check that create_l2vpns will give an error if the name and endpoints attributes are not correct. 
