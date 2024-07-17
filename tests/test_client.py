@@ -1,7 +1,7 @@
 import requests
 import unittest
 from unittest.mock import patch
-from sdxlib.client import SDXClient, SDXException
+from sdxlib.sdx_client import SDXClient, SDXException
 
 
 """
