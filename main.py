@@ -67,6 +67,12 @@ if __name__ == "__main__":
     # except SDXException as e:
     #     print(e.message)
 
+    # try:
+    #     response = client.update_l2vpn("123e4567-e89b-12d3-a456-426614174000", "state", "enabled")
+    #     print("Update Successful:", response)
+    # except SDXException as e:
+    #     print(e.message)
+
     # # Update description
     # response_json = client.update_l2vpn(
     #     "123e4567-e89b-12d3-a456-426655440000", "description", "New description"
@@ -80,6 +86,15 @@ if __name__ == "__main__":
     # # Try updating an invalid attribute (service_id)
     # try:
     #     response_json = client.update_l2vpn(
-    #         "123e4567-e89b-12d3-a456-426655440000", "service_id", "new-id"
+    #         "123e4567-e89b-12d3-a456-426655440001", "service_id", "new-id"
     #     )
     # except ValueError
+
+    # client = SDXClient(base_url="http://example.com")
+    # try:
+    #     l2vpns = client.get_all_l2vpns("2023-07-16T19:20:30Z")
+    #     print(l2vpns)
+    # except ValueError as e:
+    #     print(f"Validation error: {e}")
+    # except SDXException as e:
+    #     print(f"SDX error: {e}")
