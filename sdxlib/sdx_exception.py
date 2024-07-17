@@ -1,5 +1,3 @@
-from client import SDXClient
-
 class SDXException(Exception):
     """Custom exception class for SDXClient API errors.
 
@@ -8,11 +6,10 @@ class SDXException(Exception):
         method_messages (dict, optional): Dictionary mapping error codes to
             specific messages for a particular method (e.g., create_l2vpn,
             update_l2vpn).
+        message (str): General error message describing the exception.
     """
 
-    def __init__(
-        self, status_code, method_messages=None
-    ):
+    def __init__(self, status_code=None, method_messages=None, message=None):
         """Initializes an SDXException with status code and message.
 
         Args:
@@ -23,6 +20,7 @@ class SDXException(Exception):
         Raises:
             None
         """
-        super().__init__(f"Error {status_code}")
         self.status_code = status_code
         self.method_messages = method_messages
+        self.message = message or (method_messages.get(status_code) if method_messages else "")
+        super().__init__(self.message)
