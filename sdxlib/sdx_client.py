@@ -60,7 +60,7 @@ class SDXClient:
         self.description = description
         self.notifications = self._validate_notifications(notifications)
         self.scheduling = scheduling
-        self._validate_scheduling(scheduling)
+        #self._validate_scheduling(scheduling)
         self.qos_metrics = qos_metrics
 
     @property
@@ -320,40 +320,10 @@ class SDXClient:
             if "email" not in notification:
                 raise ValueError("Each notification dictionary must contain a key 'email'.")
             if not self.is_valid_email(notification["email"]):
-                raise ValueError(f"Invalid email address: {notification["email"]}")
+                raise ValueError(f"Invalid email address: {notification['email']}")
             validated_notifications.append(notification)
         return validated_notifications
-
-    # Scheduling Methods
-    def _validate_scheduling(self, scheduling):
-        """Validates the provided scheduling configuration.
-
-        Args:
-            scheduling (dict): Scheduling configuration.
-
-        Raises:
-            TypeError: If scheduling is not a dictionary.
-            ValueError: If scheduling contains invalid keys or values.
-        """
-        if scheduling:
-            if "start_time" not in scheduling and "end_time" not in scheduling:
-                return  # Immediate provisioning
-            if "start_time" in scheduling and not self._is_valid_iso8601(
-                scheduling["start_time"]
-            ):
-                raise ValueError(
-                    "Invalid 'start_time' format. Use ISO8601 format (YYYY-MM-DDTHH:mm:SSZ)."
-                )
-            if "end_time" in scheduling and not self._is_valid_iso8601(
-                scheduling["end_time"]
-            ):
-                raise ValueError(
-                    "Invalid 'end_time' format. Use ISO8601 format (YYYY-MM-DDTHH:mm:SSZ)."
-                )
-            if "start_time" in scheduling and "end_time" in scheduling:
-                if scheduling["end_time"] <= scheduling["start_time"]:
-                    raise ValueError("End time must be after start time.")
-
+    
     def _is_valid_iso8601(self, timestamp):
         """
         Checks if the provided string is a valid ISO8601 formatted timestamp.
@@ -367,6 +337,40 @@ class SDXClient:
         timestamp_pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"
         return bool(re.match(timestamp_pattern, timestamp))
 
+    # Scheduling Methods
+    def _validate_scheduling(self, scheduling):
+        """Validates the provided scheduling configuration.
+
+        Args:
+            scheduling (dict): Scheduling configuration.
+
+        Raises:
+            TypeError: If scheduling is not a dictionary.
+            ValueError: If scheduling contains invalid keys or values.
+        """
+        if scheduling is None:
+            return
+        
+        if not isinstance(scheduling,dict):
+            raise TypeError("Scheduling must be a dictionary.")
+        
+        valid_keys = {"start_time", "end_time"}
+        for key in scheduling:
+            if key not in valid_keys:
+                raise ValueError(f"Invalid scheduling key: {key}")
+            
+            time = scheduling[key]
+            if not isinstance(time, str):
+                raise TypeError(f"{key} must be a string.")
+            if not self._is_valid_iso8601(time):
+                raise ValueError(f"Invalid '{key}' format. Use ISO8601 format (YYYY-MM-DDTHH:mm:SSZ).")
+            
+        if "start_time" in scheduling and "end_time" in scheduling:
+            if scheduling["end_time"] <= scheduling["start_time"]:
+                raise ValueError("End time must be after start time.")
+            
+        return scheduling
+    
     # QOS Metrics Methods
     def _validate_qos_metric(self, qos_metric):
         """Validates the provided quality of service metrics.
