@@ -60,7 +60,6 @@ class SDXClient:
         self.description = description
         self.notifications = self._validate_notifications(notifications)
         self.scheduling = scheduling
-        #self._validate_scheduling(scheduling)
         self.qos_metrics = qos_metrics
 
     @property
@@ -345,7 +344,7 @@ class SDXClient:
             scheduling (dict): Scheduling configuration.
 
         Raises:
-            TypeError: If scheduling is not a dictionary.
+            TypeError: If scheduling is not a dictionary and value is not a string.
             ValueError: If scheduling contains invalid keys or values.
         """
         if scheduling is None:
@@ -372,41 +371,39 @@ class SDXClient:
         return scheduling
     
     # QOS Metrics Methods
-    def _validate_qos_metric(self, qos_metric):
+    def _validate_qos_metric(self, qos_metrics):
         """Validates the provided quality of service metrics.
 
         Args:
             qos_metrics (dict): Quality of service metrics.
 
         Raises:
-            TypeError: If qos_metrics is not a dictionary.
+            TypeError: If qos_metrics is not a dictionary and values are invalid types.
             ValueError: If qos_metrics contains invalid keys or values.
         """
-        if qos_metric is None:
+        if qos_metrics is None:
             return
+        
+        if not isinstance(qos_metrics, dict):
+            raise TypeError("QoS metrics must be a dictionary.")
 
         valid_keys = {"min_bw", "max_delay", "max_number_oxps"}
-        if not set(qos_metric.keys()) <= valid_keys:
-            raise ValueError(
-                "Invalid qos_metric keys. Valid keys are: {}".format(
-                    ", ".join(valid_keys)
-                )
-            )
-
-        for key, value_dict in qos_metric.items():
+        for key, value_dict in qos_metrics.items():
+            if key not in valid_keys:
+                raise ValueError(f"Invalid QoS metric: {key}")
             if not isinstance(value_dict, dict):
-                raise TypeError(
-                    "qos_metric value for '{}' must be a dictionary.".format(key)
-                )
+                raise TypeError(f"QoS metric value for '{key}' must be a dictionary.")
             self._validate_qos_metric_value(key, value_dict)
 
     def _validate_qos_metric_value(self, key, value_dict):
         if "value" not in value_dict:
             raise ValueError(
-                "Missing required key 'value' in qos_metric for '{}'".format(key)
+                f"Missing required key 'value' in QoS metric for '{key}'"
             )
         if not isinstance(value_dict["value"], int):
-            raise TypeError("qos value for '{}' must be an integer.".format(key))
+            raise TypeError("QoS value for '{key}' must be an integer.")
+        if "strict" in value_dict and not isinstance(value_dict["strict"], bool):
+            raise TypeError(f"'strict' in QoS metric of '{key}' must be a boolean.")
 
         # Specific range checks for each key
         if key == "min_bw":
@@ -431,8 +428,7 @@ class SDXClient:
     _logger = logging.getLogger(__name__)
 
     def create_l2vpn(self):
-        """
-        Creates an L2VPN using the provided configuration.
+        """Creates an L2VPN using the provided configuration.
 
         Returns:
             dict: Response from the SDX API.
@@ -486,6 +482,7 @@ class SDXClient:
             self._logger.info(f"L2VPN creation request sent to {url}.")
             return response_json
         except HTTPError as e:
+            status_code = e.response.status_code
             method_messages = {
                 201: "L2VPN Service Created",
                 400: "Request does not have a valid JSON or body is incomplete/incorrect",
@@ -496,14 +493,14 @@ class SDXClient:
                 411: "Scheduling not possible",
                 422: "Attribute not supported by the SDX-LC/OXPO",
             }
+            error_message = method_messages.get(status_code, "Unknown error occurred.")
             print(f"Mocked server response:\n {e.response.text}")
             raise SDXException(
-                status_code=e.response.status_code, method_messages=method_messages
-            )
+                status_code=status_code, method_messages=method_messages, message=error_message)
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
             print(f"An error occurred while creating L2VPN: {e}")
-            return e
+            raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
 
     def update_l2vpn(self, service_id, attribute, value):
         """Updates an existing L2VPN using the provided L2VPN ID.
