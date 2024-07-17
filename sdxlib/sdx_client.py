@@ -56,7 +56,7 @@ class SDXClient:
         """
         self.base_url = base_url
         self.name = name
-        self.endpoints = self._validate_endpoints(endpoints)
+        self.endpoints = self._validate_endpoints(endpoints) if endpoints else None
         self.description = description
         self.notifications = self._validate_notifications(notifications)
         self.scheduling = scheduling
@@ -70,7 +70,7 @@ class SDXClient:
     @name.setter
     def name(self, value):
         """Setter for name attribute."""
-        if not isinstance(value, str) or not value or len(value) > 50:
+        if value is not None and (not isinstance(value, str) or not value or len(value) > 50):
             raise ValueError(
                 "Name must be a non-empty string with maximum 50 characters."
             )
@@ -84,7 +84,7 @@ class SDXClient:
     @endpoints.setter
     def endpoints(self, value):
         """Setter for endpoint attribute."""
-        self.__endpoints = self._validate_endpoints(value)
+        self.__endpoints = self._validate_endpoints(value) if value else None
 
     @property
     def description(self):
@@ -324,17 +324,9 @@ class SDXClient:
         return validated_notifications
     
     def _is_valid_iso8601(self, timestamp):
-        """
-        Checks if the provided string is a valid ISO8601 formatted timestamp.
-
-        ARgs:
-            timestamp(str): The timestamp string to validate.
-
-        Returns:
-            bool: True if the format is valid, False otherwise.
-        """
+        """Checks if the provided string is a valid ISO8601 formatted timestamp."""
         timestamp_pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"
-        return bool(re.match(timestamp_pattern, timestamp))
+        return re.match(timestamp_pattern, timestamp) is not None
 
     # Scheduling Methods
     def _validate_scheduling(self, scheduling):
@@ -555,8 +547,7 @@ class SDXClient:
             raise SDXException(f"Failed to update L2VPN: {e}")
 
     def get_l2vpn(self, service_id):
-        """
-        Retrieves details of an existing L2VPN using the provided L2VPN ID.
+        """Retrieves details of an existing L2VPN using the provided service ID.
 
         Args:
             service_id (str): The ID of the L2VPN to retrieve.
@@ -568,24 +559,26 @@ class SDXClient:
             SDXException: If the API request fails.
         """
 
-        url = f"{self.base_url}/{service_id}"  # l2vpn/{self.VERSION}/{service_id}"
+        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
 
         try:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
-            return response.json() if response.content else None
+            return response.json() 
         except HTTPError as e:
+            status_code = e.response.status_code
             method_messages = {
                 200: "OK",
                 401: "Not Authorized",
                 404: "Service ID not found",
             }
+            error_message = method_messages.get(status_code, "Unknown error occurred.")
             raise SDXException(
-                status_code=e.response.status_code, method_messages=method_messages
+                status_code=status_code, method_messages=method_messages, message=error_message
             )
         except RequestException as e:
-            print(f"An error occurred while retrieving L2VPN: {e}")
-            return None
+            logging.error(f"Failed to retrieve L2VPN: {e}")
+            raise SDXException(f"Failed to retrieve L2VPN: {e}")
 
     def get_all_l2vpns(self, archived_date="0"):
         """
@@ -604,7 +597,7 @@ class SDXClient:
             ValueError: If an invalid archived_date format is provided.
         """
 
-        if not self._is_valid_iso8601(archived_date):
+        if archived_date != "0" and not self._is_valid_iso8601(archived_date):
             raise ValueError(
                 "Invalid archived_date parameter. Must be a valid ISO8601 formatted timestamp."
             )
@@ -614,20 +607,20 @@ class SDXClient:
         try:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
-            return response.json() if response.content else {}
+            return response.json() 
         except HTTPError as e:
-            error_msg = response.json().get("description", "Unknown error")
+            status_code = e.response.status_code
             method_messages = {
                 200: "OK",
             }
+            error_message = method_messages.get(status_code, "Unknown error occurred.")
             raise SDXException(
-                status_code=e.response.status_code,
-                message=error_msg,
-                method_messages=method_messages,
+                status_code=status_code, method_messages=method_messages, message=error_message
             )
         except RequestException as e:
-            print(f"An error occurred while retrieving L2VPN: {e}")
-            return None
+            logging.error(f"Failed to retrieve L2VPN(s): {e}")
+            print(f"Failed to retrieve L2VPN(s): {e}")
+            raise SDXException(f"Failed to retrieve L2VPN(s): {e}")
 
     def delete_l2vpn(self, service_id):
         """Deletes an L2VPN using the provided L2VPN ID.
