@@ -1,4 +1,5 @@
-from sdxlib.client import SDXClient
+from sdxlib.sdx_client import SDXClient
+from sdxlib.sdx_exception import SDXException
 
 if __name__ == "__main__":
     # Example usage
@@ -16,10 +17,10 @@ if __name__ == "__main__":
     client_description = (
         ""  # This is an example to demonstrate a L2VPN with optional attributes."
     )
-    client_notifications = []  # {"email":f"user{i+1}@email.com"} for i in range(10)]
+    client_notifications = []  #{"email":f"user{i+1}@email.com"} for i in range(10)]
     client_scheduling = {
-        # "start_time": "2024-07-04T10:00:00Z",
-        # "end_time": "2024-07-05T18:00:00Z"
+        "start_time": "2024-07-04T10:00:00Z",
+        "end_time": "2024-07-05T18:00:00Z"
     }
     client_qos_metrics = {
         # "min_bw": {
@@ -59,6 +60,12 @@ if __name__ == "__main__":
         print(f"Error: {e}")
     except SDXException as e:
         print(f"SDX Error: {e.status_code} - {e.message}")
+
+    # try:
+    #     response = client.create_l2vpn()
+    #     print(response)
+    # except SDXException as e:
+    #     print(e.message)
 
     # # Update description
     # response_json = client.update_l2vpn(
