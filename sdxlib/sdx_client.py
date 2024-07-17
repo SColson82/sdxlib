@@ -639,8 +639,9 @@ class SDXClient:
         try:
             response = requests.delete(url, verify=True, timeout=120)
             response.raise_for_status()
-            # return response.json() if response.content else {}
+            return response.json() if response.content else None
         except HTTPError as e:
+            status_code = e.response.status_code
             error_msg = response.json().get("description", "Unknown error")
             method_messages = {
                 201: "L2VPN Deleted",
@@ -648,15 +649,13 @@ class SDXClient:
                 404: "L2VPN Service ID provided does not exist",
             }
             raise SDXException(
-                status_code=e.response.status_code,
+                status_code=status_code,
                 message=error_msg,
                 method_messages=method_messages,
             )
         except RequestException as e:
-            print(f"An error occurred while retrieving L2VPN: {e}")
-            return SDXException("Error deleteing L2VPN", cause=e)
-
-        return None
+            logging.error(f"Failed to delete L2VPN: {e}")
+            return SDXException("Failed to delete L2VPN", cause=e)
 
     # Utility Methods
     def __str__(self):
