@@ -323,7 +323,7 @@ class SDXClient:
                     "Each notification dictionary must contain a key 'email'."
                 )
             if not self.is_valid_email(notification["email"]):
-                raise ValueError(f"Invalid email address: {notification['email']}")
+                raise ValueError(f"Invalid email address or email format: {notification['email']}")
             validated_notifications.append(notification)
         return validated_notifications
 
@@ -423,23 +423,30 @@ class SDXClient:
     _request_cache = {}
     _logger = logging.getLogger(__name__)
 
-    def create_l2vpn(self):
-        """Creates an L2VPN using the provided configuration.
+    def create_l2vpn(self) -> requests.Response:
+        """Creates an L2VPN.
 
         Returns:
-            dict: Response from the SDX API.
+            requests.Response: Response object from the SDX API.
 
         Raises:
-            SDXException: If the API request fails.
+            SDXException: If the L2VPN creation fails.
+            ValueError: If required attributes are missing.
         """
-
+        if not self.base_url or not self.name or not self.endpoints:
+            raise ValueError("Creating L2VPN requires the base URL, name, and endpoints at minumum.")
         url = f"{self.base_url}/l2vpn/{self.VERSION}"
+        # payload = {
+        #     "name": self.name,
+        #     "endpoints": [
+        #         {"port_id": endpoint["port_id"], "vlan": endpoint["vlan"]}
+        #         for endpoint in self.endpoints
+        #     ],
+        # }
+
         payload = {
             "name": self.name,
-            "endpoints": [
-                {"port_id": endpoint["port_id"], "vlan": endpoint["vlan"]}
-                for endpoint in self.endpoints
-            ],
+            "endpoints": self.endpoints
         }
 
         # Add optional attributes if provided.
