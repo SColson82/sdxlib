@@ -1,3 +1,20 @@
 In scheduling, start_time and end_time should both be after whatever time it is right now. 
 Add functionality to get_all_l2vpns to accept a broader iso8601 or take a (1) for all archived objects.
 Double check that create_l2vpns will give an error if the name and endpoints attributes are not correct. 
+Unittests are probably not executing properly, check the ones that exist and correct them and then create unittests for the remaining methods.
+Read over sdx_client and check docstrings and see if any support functions can be removed to another file. 
+Create the README.
+Is this on MIT license?
+Is it okay that the empty SDXClient object be created initially or would you prefer the obeject be created with a base url already specified?
+Check that docstrings are following same format (Args, Returns, Raises).
+Check that all methods have docstrings.
+Unit tests for SDXExceptions edge cases. 
+Look at logging and maybe consider adding additional logging. 
+Extract attribute validation to separate modules and methods. 
+There's some repetition in the methods dealing with API requests. Consider creating a helper method to handle common request logic (e.g., setting up headers, handling responses, caching).
+Use type hints for method arguments and return types to improve code readability and support for static analysis tools.
+Look in to `mypy` to ensure type safety across codebase.
+Ensure logging is consistent and at appropriate levels (info, debug, error). This will help in monitoring and debugging when running client in production.
+Configure logger with a specific format and potentially output to files or other logging services.
+test_client_endpoints.py: test_create_l2vpn_endpoints_required: Endpoints, name, and url attributes need to be required in the create_l2vpn method but only URL needs to be required in the other methods. 
+
