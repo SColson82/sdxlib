@@ -72,16 +72,16 @@ class TestSDXClient(unittest.TestCase):
             endpoints=client_endpoints,
         )
 
-        # Call the function and assert it returns None
-        response = client.create_l2vpn()
-        self.assertIsNone(response)
+        # Call the function and assert it raises SDXException
+        with self.assertRaises(SDXException) as context:
+            client.create_l2vpn()
+        self.assertEqual(str(context.exception), "An error occurred while creating L2VPN: Connection error")
 
         # Verify that requests.post was called
         mock_post.assert_called_once()
 
     def test_create_l2vpn_url_required(self):
         """Checks that 'base_url' is provided."""
-        # url = "http://example.com"
         client_name = "Test L2VPN"
         client_endpoints = [
             {
@@ -102,10 +102,9 @@ class TestSDXClient(unittest.TestCase):
             client.create_l2vpn()
         self.assertEqual(str(context.exception), "Creating L2VPN requires the base URL, name, and endpoints at minumum.")
 
-    def test_create_l2vpn_endpoints_required(self):
-        """Checks that 'endpoints' is provided."""
+    def test_create_l2vpn_name_required(self):
+        """Checks that 'name' is provided."""
         url = "http://example.com"
-        # client_name = "Test L2VPN"
         client_endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -129,25 +128,13 @@ class TestSDXClient(unittest.TestCase):
         """Checks that 'endpoints' is provided."""
         url = "http://example.com"
         client_name = "Test L2VPN"
-        # client_endpoints = [
-        #     {
-        #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-        #         "vlan": "100",
-        #     },
-        #     {
-        #         "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-        #         "vlan": "200",
-        #     },
-        # ]
-
-        client = SDXClient(
-            base_url=url,
-            name=client_name,
-        )
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(TypeError) as context:
+            client = SDXClient(
+                base_url=url,
+                name=client_name,
+            )
             client.create_l2vpn()
-        self.assertEqual(str(context.exception), "Creating L2VPN requires the base URL, name, and endpoints at minumum.")
-
+        self.assertEqual(str(context.exception), "Endpoints must be a list.")
 
 # Run the tests
 if __name__ == "__main__":
