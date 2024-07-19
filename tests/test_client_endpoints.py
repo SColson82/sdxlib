@@ -7,44 +7,22 @@ class TestSDXClient(unittest.TestCase):
 
     def test_endpoints_list_check(self):
         """Checks that non-list value is not allowed for the 'endpoints' attribute."""
+        client_url = "http://example.com"
         client_name = "Test L2VPN"
-        client_endpoints = [
-            {
-                "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-                "vlan": "100",
-            },
-            {
-                "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-                "vlan": "200",
-            },
-        ]
-
-        client = SDXClient(
-            base_url="http://example.com", name=client_name #, endpoints=client_endpoints
-        )
         with self.assertRaises(TypeError) as context:
-            client.endpoints = "invalid endpoints"
+            SDXClient(
+            base_url=client_url, name=client_name, endpoints="invalid endpoints"
+            )
         self.assertEqual(str(context.exception), "Endpoints must be a list.")
 
     def test_endpoints_empty_list(self):
         """Checks that an empty list is not allowed for the 'endpoints' attribute."""
+        client_url = "http://example.com"
         client_name = "Test L2VPN"
-        client_endpoints = [
-            {
-                "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
-                "vlan": "100",
-            },
-            {
-                "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
-                "vlan": "200",
-            },
-        ]
-
-        client = SDXClient(
-            base_url="http://example.com", name=client_name#, endpoints=client_endpoints
-        )
         with self.assertRaises(ValueError) as context:
-            client.endpoints = []
+            SDXClient(
+            base_url=client_url, name=client_name, endpoints=[]
+            )
         self.assertEqual(
             str(context.exception), "Endpoints must contain at least 2 entries."
         )
