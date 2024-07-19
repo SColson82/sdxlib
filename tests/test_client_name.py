@@ -55,10 +55,21 @@ class TestSDXClient(unittest.TestCase):
 
     def test_name_non_string(self):
         """Checks that a non-string value is not allowed for the 'name' attribute."""
-        client = SDXClient(base_url="http://example.com", name=123)
-        with self.assertRaises(TypeError) as context:
+        client_url = "http://example.com"
+        client_endpoints = [
+            {
+                "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
+                "vlan": "100",
+            },
+            {
+                "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name2",
+                "vlan": "200",
+            },
+        ]
+        client = SDXClient(base_url=client_url, endpoints=client_endpoints)
+        with self.assertRaises(ValueError) as context:
             client.name = 123
-        self.assertEqual(client.name, "Name must be a non-empty string with maximum 50 characters.")
+        self.assertEqual(str(context.exception), "Name must be a non-empty string with maximum 50 characters.")
 
     def test_valid_name(self):
         """Checks that a valid name is accepted."""
