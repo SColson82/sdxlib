@@ -71,6 +71,8 @@ class TestSDXClient(unittest.TestCase):
 
     def test_qos_metrics_invalid_type(self):
         """Test setting qos_metrics with invalid type"""
+        client_url = "http://example.com"
+        client_name = "Test L2VPN"
         client_endpoints = [
             {
                 "port_id": "urn:sdx:port:test-oxp_url:test-node_name:test-port_name",
@@ -81,14 +83,12 @@ class TestSDXClient(unittest.TestCase):
                 "vlan": "200",
             },
         ]
-        with self.assertRaises(AttributeError):
-            client = SDXClient(
-                base_url="http://example.com",
-                name="test",
-                endpoints=client_endpoints,
-                description="",
-                qos_metrics="invalid string",
-            )
+        client = SDXClient(base_url=client_url, name=client_name, endpoints=client_endpoints)
+        with self.assertRaises(TypeError) as context:
+                client.qos_metrics = "invalid string",
+        self.assertEqual(
+            str(context.exception), "QoS metrics must be a dictionary."
+        )
 
     def test_qos_metrics_min_bw_out_of_range(self):
         """Test setting min_bw with value outside valid range"""
