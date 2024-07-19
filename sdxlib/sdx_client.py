@@ -56,7 +56,7 @@ class SDXClient:
         """
         self.base_url = base_url
         self.name = name
-        self.endpoints = self._validate_endpoints(endpoints) if endpoints else None
+        self.endpoints = self._validate_endpoints(endpoints) 
         self.description = description
         self.notifications = self._validate_notifications(notifications)
         self.scheduling = scheduling
