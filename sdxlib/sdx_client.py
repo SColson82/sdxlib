@@ -56,7 +56,7 @@ class SDXClient:
         """
         self.base_url = base_url
         self.name = name
-        self.endpoints = self._validate_endpoints(endpoints) 
+        self.endpoints = self._validate_endpoints(endpoints)
         self.description = description
         self.notifications = self._validate_notifications(notifications)
         self.scheduling = scheduling
@@ -323,7 +323,9 @@ class SDXClient:
                     "Each notification dictionary must contain a key 'email'."
                 )
             if not self.is_valid_email(notification["email"]):
-                raise ValueError(f"Invalid email address or email format: {notification['email']}")
+                raise ValueError(
+                    f"Invalid email address or email format: {notification['email']}"
+                )
             validated_notifications.append(notification)
         return validated_notifications
 
@@ -434,7 +436,9 @@ class SDXClient:
             ValueError: If required attributes are missing.
         """
         if not self.base_url or not self.name or not self.endpoints:
-            raise ValueError("Creating L2VPN requires the base URL, name, and endpoints at minumum.")
+            raise ValueError(
+                "Creating L2VPN requires the base URL, name, and endpoints at minumum."
+            )
         url = f"{self.base_url}/l2vpn/{self.VERSION}"
         # payload = {
         #     "name": self.name,
@@ -444,10 +448,7 @@ class SDXClient:
         #     ],
         # }
 
-        payload = {
-            "name": self.name,
-            "endpoints": self.endpoints
-        }
+        payload = {"name": self.name, "endpoints": self.endpoints}
 
         # Add optional attributes if provided.
         if self.description:
