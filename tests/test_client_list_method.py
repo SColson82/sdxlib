@@ -3,7 +3,10 @@ import unittest
 from unittest.mock import patch
 from sdxlib.sdx_client import SDXClient, SDXException
 
+
 class TestSDXClient(unittest.TestCase):
+    pass
+
 
 # Run the tests
 if __name__ == "__main__":
