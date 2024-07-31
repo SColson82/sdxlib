@@ -37,7 +37,7 @@ class SDXClient:
         self,
         base_url=None,
         name=None,
-        endpoints=None,
+        endpoints=[],
         description=None,
         notifications=None,
         scheduling=None,
@@ -54,6 +54,7 @@ class SDXClient:
         - scheduling (dict, optional): Scheduling configuration (default: None).
         - qos_metrics (dict, optional): Quality of service metrics (default: None).
         """
+        self._name = None
         self.base_url = base_url
         self.name = name
         self.endpoints = self._validate_endpoints(endpoints)
@@ -163,6 +164,8 @@ class SDXClient:
             ValueError: If endpoints list is empty or does not contain at least 2 entries,
                 or if VLAN configuration is invalid.
         """
+        if endpoints is None:
+            return endpoints
         if not isinstance(endpoints, list):
             raise TypeError("Endpoints must be a list.")
         if len(endpoints) < 2:
@@ -498,7 +501,7 @@ class SDXClient:
                 422: "Attribute not supported by the SDX-LC/OXPO",
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
-            print(f"Mocked server response:\n {e.response.text}")
+            # print(f"Mocked server response:\n {e.response.text}")
             raise SDXException(
                 status_code=status_code,
                 method_messages=method_messages,
@@ -509,11 +512,15 @@ class SDXClient:
             print(f"An error occurred while creating L2VPN: {e}")
             raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
 
-    def update_l2vpn(self, service_id, attribute, value):
-        """Updates an existing L2VPN using the provided service ID.
+    # def update_l2vpn(self, service_id, attribute, value):
+    def update_l2vpn(self, service_id, **kwargs):
+
+        """Updates an existing L2VPN using the provided service ID and keyword arguments.
 
         Args:
             service_id (str): The ID of the L2VPN service to update.
+            **kwargs: Arbitrary keyword arguments representing the attributes to be updated. 
+                      The 'state' attribute can only be changed to 'enabled' or 'disabled'.
 
         Returns:
             dict: Response from the SDX API.
@@ -523,19 +530,20 @@ class SDXClient:
         """
 
         url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
-        print(f"Sending update to {url}")
+        # print(f"Sending update to {url}")
 
         payload = {"service_id": service_id}
 
-        if attribute not in ["service_id", "state"]:
-            payload[attribute] = value
-        else:
-            if attribute == "state" and value.lower() in ("enabled", "disabled"):
-                payload[attribute] = value.lower()
+        for attribute, value in kwargs.items():
+            if attribute not in ["service_id", "state"]:
+                payload[attribute] = value
             else:
-                raise ValueError(
-                    "Invalid update: Cannot modify service_id. The 'state' attribute can only be changed to 'enabled' or 'disabled'."
-                )
+                if attribute == "state" and value.lower() in ("enabled", "disabled"):
+                    payload[attribute] = value.lower()
+                else:
+                    raise ValueError(
+                        "Invalid update: Cannot modify service_id. The 'state' attribute can only be changed to 'enabled' or 'disabled'."
+                    )
 
         try:
             response = requests.patch(url, json=payload, verify=True, timeout=120)
