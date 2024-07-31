@@ -57,7 +57,6 @@ class SDXClient:
         self._name = None
         self.base_url = base_url
         self.name = name
-        # self.endpoints = self._validate_endpoints(endpoints)
         self.endpoints = endpoints
         self.description = description
         self.notifications = self._validate_notifications(notifications)
@@ -444,13 +443,6 @@ class SDXClient:
                 "Creating L2VPN requires the base URL, name, and endpoints at minumum."
             )
         url = f"{self.base_url}/l2vpn/{self.VERSION}"
-        # payload = {
-        #     "name": self.name,
-        #     "endpoints": [
-        #         {"port_id": endpoint["port_id"], "vlan": endpoint["vlan"]}
-        #         for endpoint in self.endpoints
-        #     ],
-        # }
 
         payload = {"name": self.name, "endpoints": self.endpoints}
 
@@ -477,10 +469,6 @@ class SDXClient:
 
         self._logger.info(f"L2VPN creation request sent to {url}.")
 
-        # print(
-        #     f"L2VPN creation request sent to {url}. It may take several seconds to receive a response."
-        # )
-
         try:
             response = requests.post(url, json=payload, timeout=120)
             response.raise_for_status()
@@ -502,7 +490,6 @@ class SDXClient:
                 422: "Attribute not supported by the SDX-LC/OXPO",
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
-            # print(f"Mocked server response:\n {e.response.text}")
             self._logger.error(
                 f"Failed to create L2VPN. Status code: {status_code}: {error_message}"
             )
@@ -513,10 +500,8 @@ class SDXClient:
             )
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
-            # print(f"An error occurred while creating L2VPN: {e}")
             raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
 
-    # def update_l2vpn(self, service_id, attribute, value):
     def update_l2vpn(self, service_id, **kwargs):
 
         """Updates an existing L2VPN using the provided service ID and keyword arguments.
@@ -534,7 +519,6 @@ class SDXClient:
         """
 
         url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
-        # print(f"Sending update to {url}")
 
         payload = {"service_id": service_id}
 
@@ -635,11 +619,6 @@ class SDXClient:
             SDXException: If the API request fails with a known error code and description.
             ValueError: If an invalid parameters are provided.
         """
-
-        # if archived_date != "0" and not self._is_valid_iso8601(archived_date):
-        #     raise ValueError(
-        #         "Invalid archived_date parameter. Must be a valid ISO8601 formatted timestamp."
-        #     )
         if all and active_only:
             raise ValueError("Cannot specify both all and active_only.")
 
@@ -676,7 +655,6 @@ class SDXClient:
             )
         except RequestException as e:
             logging.error(f"Failed to retrieve L2VPN(s): {e}")
-            # print(f"Failed to retrieve L2VPN(s): {e}")
             raise SDXException(f"Failed to retrieve L2VPN(s): {e}")
 
     def delete_l2vpn(self, service_id):
