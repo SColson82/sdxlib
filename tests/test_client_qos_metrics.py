@@ -2,14 +2,12 @@ import unittest
 from sdxlib.sdx_client import SDXClient
 from test_config import TEST_URL, TEST_NAME, TEST_ENDPOINTS
 
+
 class TestSDXClient(unittest.TestCase):
     def test_qos_metrics_none(self):
         """Test setting qos_metrics to None"""
         client = SDXClient(
-            base_url=TEST_URL,
-            name=TEST_NAME,
-            endpoints=TEST_ENDPOINTS,
-            description="",
+            base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS, description="",
         )
         self.assertIsNone(client.qos_metrics)
 
@@ -41,9 +39,7 @@ class TestSDXClient(unittest.TestCase):
 
     def test_qos_metrics_invalid_type(self):
         """Test setting qos_metrics with invalid type"""
-        client = SDXClient(
-            base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS
-        )
+        client = SDXClient(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS)
         with self.assertRaises(TypeError) as context:
             client.qos_metrics = ("invalid string",)
         self.assertEqual(str(context.exception), "QoS metrics must be a dictionary.")
@@ -65,6 +61,7 @@ class TestSDXClient(unittest.TestCase):
             str(context.exception),
             "qos_metric 'min_bw' value must be between 0 and 100.",
         )
+
 
 # Run the tests
 if __name__ == "__main__":

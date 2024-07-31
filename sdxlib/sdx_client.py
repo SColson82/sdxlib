@@ -503,7 +503,9 @@ class SDXClient:
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
             # print(f"Mocked server response:\n {e.response.text}")
-            self._logger.error(f"Failed to create L2VPN. Status code: {status_code}: {error_message}")
+            self._logger.error(
+                f"Failed to create L2VPN. Status code: {status_code}: {error_message}"
+            )
             raise SDXException(
                 status_code=status_code,
                 method_messages=method_messages,
@@ -565,7 +567,9 @@ class SDXClient:
                 411: "Scheduling not possible",
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
-            self._logger.error(f"Failed to update L2VPN. Status code: {status_code}: {error_message}")
+            self._logger.error(
+                f"Failed to update L2VPN. Status code: {status_code}: {error_message}"
+            )
             raise SDXException(
                 status_code=status_code,
                 method_messages=method_messages,
@@ -603,7 +607,9 @@ class SDXClient:
                 404: "Service ID not found",
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
-            self._logger.error(f"Failed to retrieve L2VPN. Status code: {status_code}: {error_message}")            
+            self._logger.error(
+                f"Failed to retrieve L2VPN. Status code: {status_code}: {error_message}"
+            )
             raise SDXException(
                 status_code=status_code,
                 method_messages=method_messages,
@@ -635,9 +641,7 @@ class SDXClient:
         #         "Invalid archived_date parameter. Must be a valid ISO8601 formatted timestamp."
         #     )
         if all and active_only:
-            raise ValueError(
-                "Cannot specify both all and active_only."
-            )
+            raise ValueError("Cannot specify both all and active_only.")
 
         url = f"{self.base_url}/l2vpn/{self.VERSION}/"
 
@@ -662,7 +666,9 @@ class SDXClient:
                 200: "OK",
             }
             error_message = method_messages.get(status_code, "Unknown error occurred.")
-            self._logger.error(f"Failed to retrieve L2VPNs. Status code: {status_code}: {error_message}")            
+            self._logger.error(
+                f"Failed to retrieve L2VPNs. Status code: {status_code}: {error_message}"
+            )
             raise SDXException(
                 status_code=status_code,
                 method_messages=method_messages,
@@ -700,7 +706,9 @@ class SDXClient:
                 401: "Not Authorized",
                 404: "L2VPN Service ID provided does not exist",
             }
-            self._logger.error(f"Failed to delete L2VPN. Status code: {status_code}: {error_msg}")
+            self._logger.error(
+                f"Failed to delete L2VPN. Status code: {status_code}: {error_msg}"
+            )
             raise SDXException(
                 status_code=status_code,
                 message=error_msg,

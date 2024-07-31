@@ -2,8 +2,8 @@ import unittest
 from sdxlib.sdx_client import SDXClient
 from test_config import TEST_URL, TEST_NAME, TEST_ENDPOINTS
 
-class TestSDXClient(unittest.TestCase):
 
+class TestSDXClient(unittest.TestCase):
     def test_endpoints_list_check(self):
         """Checks that non-list value is not allowed for the 'endpoints' attribute."""
         with self.assertRaises(TypeError) as context:
@@ -780,6 +780,7 @@ class TestSDXClient(unittest.TestCase):
         ]
         # client.endpoints = valid_endpoints
         self.assertEqual(client.endpoints, valid_endpoints)
+
 
 # Run the tests
 if __name__ == "__main__":

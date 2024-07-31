@@ -2,6 +2,7 @@ import unittest
 from sdxlib.sdx_client import SDXClient
 from test_config import TEST_URL, TEST_NAME, TEST_ENDPOINTS
 
+
 class TestSDXClientScheduling(unittest.TestCase):
     def test_valid_scheduling_both_times(self):
         client_description = (
@@ -37,10 +38,7 @@ class TestSDXClientScheduling(unittest.TestCase):
 
     def test_valid_scheduling_empty_dict(self):
         client = SDXClient(
-            base_url=TEST_URL,
-            name=TEST_NAME,
-            endpoints=TEST_ENDPOINTS,
-            scheduling={},
+            base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS, scheduling={},
         )
         self.assertEqual(client.scheduling, None)
 
@@ -81,6 +79,7 @@ class TestSDXClientScheduling(unittest.TestCase):
         self.assertEqual(
             str(context.exception), "Scheduling attribute must be a dictionary."
         )
+
 
 if __name__ == "__main__":
     unittest.main()
