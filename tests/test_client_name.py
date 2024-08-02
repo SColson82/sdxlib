@@ -1,19 +1,18 @@
 import unittest
 from sdxlib.sdx_client import SDXClient
-from test_config import TEST_URL, TEST_NAME, TEST_ENDPOINTS
+from test_config import create_client, ERROR_NAME_INVALID
 
 
 class TestSDXClient(unittest.TestCase):
-    ERROR_MESSAGE = "Name must be a non-empty string with maximum 50 characters."
     def setUp(self):
         """Initializes the client instance."""
-        self.client = SDXClient(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS)
+        self.client = create_client()
 
     def assert_invalid_name(self, invalid_name):
         """Helper function to assert a ValueError with a specific message."""
         with self.assertRaises(ValueError) as context:
             self.client.name = invalid_name
-        self.assertEqual(str(context.exception), self.ERROR_MESSAGE)
+        self.assertEqual(str(context.exception), ERROR_NAME_INVALID)
 
     # Checks for no name passed.
     def test_name_empty_string(self):
