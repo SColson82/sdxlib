@@ -59,5 +59,12 @@ ERROR_VLAN_RANGE_VALUE = "Invalid VLAN range format: '{}'. Must be 'VLAN ID1:VLA
 # Description error messages
 ERROR_DESCRIPTION_TOO_LONG = "Description attribute must be less than 256 characters."
 
+# Notifications error messages
+ERROR_NOTIFICATIONS_NOT_LIST = "Notifications must be provided as a list."
+ERROR_NOTIFICATION_ITEM_NOT_DICT = "Each notification must be a dictionary."
+ERROR_NOTIFICATION_ITEM_EMAIL_KEY = "Each notification dictionary must contain a key 'email'."
+ERROR_NOTIFICATION_INVALID_EMAIL_FORMAT = "Invalid email address or email format: invalid_email"
+ERROR_NOTIFICATION_EXCEEDS_LIMIT = "Notifications can contain at most 10 email addresses."
+
 def create_client(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS):
     return SDXClient(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS)
