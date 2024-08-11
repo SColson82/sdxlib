@@ -56,6 +56,8 @@ ERROR_VLAN_RANGE_MISMATCH = (
 ERROR_VLAN_INVALID = "Invalid VLAN value: '{}'. Must be 'any', 'all', 'untagged', a string representing an integer between 1 and 4095, or a range."
 ERROR_VLAN_RANGE_VALUE = "Invalid VLAN range format: '{}'. Must be 'VLAN ID1:VLAN ID2'."
 
+# Description error messages
+ERROR_DESCRIPTION_TOO_LONG = "Description attribute must be less than 256 characters."
 
 def create_client(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS):
     return SDXClient(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS)
