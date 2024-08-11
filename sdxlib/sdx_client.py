@@ -72,7 +72,7 @@ class SDXClient:
     def name(self, value):
         """Setter for name attribute."""
         if value is not None and (
-            not isinstance(value, str) or not value or len(value) > 50
+            not isinstance(value, str) or not value.strip() or len(value) > 50
         ):
             raise ValueError(
                 "Name must be a non-empty string with maximum 50 characters."
