@@ -87,7 +87,7 @@ class SDXClient:
     @endpoints.setter
     def endpoints(self, value):
         """Setter for endpoint attribute."""
-        self.__endpoints = self._validate_endpoints(value) if value else None
+        self.__endpoints = self._validate_endpoints(value) # if value else None
 
     @property
     def description(self):
@@ -164,8 +164,8 @@ class SDXClient:
             ValueError: If endpoints list is empty or does not contain at least 2 entries,
                 or if VLAN configuration is invalid.
         """
-        if endpoints is None:
-            return []
+        # if endpoints is None:
+        #     return []
         if not isinstance(endpoints, list):
             raise TypeError("Endpoints must be a list.")
         if len(endpoints) < 2:
@@ -442,6 +442,8 @@ class SDXClient:
             raise ValueError(
                 "Creating L2VPN requires the base URL, name, and endpoints at minumum."
             )
+        # if isinstance(self.endpoints, list) and len(self.endpoints) < 2:
+        #     raise ValueError("The 'endpoints' list cannot be empty.")
         url = f"{self.base_url}/l2vpn/{self.VERSION}"
 
         payload = {"name": self.name, "endpoints": self.endpoints}

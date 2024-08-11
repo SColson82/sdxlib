@@ -42,7 +42,7 @@ class TestSDXClient(unittest.TestCase):
 
     def test_endpoints_empty_list(self):
         """Checks that an empty list is not allowed for the 'endpoints' attribute."""
-        self.assert_invalid_endpoints([], ERROR_EMPTY_ENDPOINTS_LIST)
+        self.assert_invalid_endpoints([], ERROR_MIN_ENTRIES)
 
     def test_endpoints_min_required(self):
         """Checks that a list with less than 2 endpoints is not allowed."""
