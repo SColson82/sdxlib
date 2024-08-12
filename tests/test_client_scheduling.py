@@ -1,83 +1,62 @@
 import unittest
 from sdxlib.sdx_client import SDXClient
-from test_config import TEST_URL, TEST_NAME, TEST_ENDPOINTS
+from test_config import (
+    create_client,
+    ERROR_SCHEDULING_FORMAT,
+    ERROR_SCHEDULING_END_BEFORE_START,
+    ERROR_SCHEDULING_NOT_DICT,
+)
 
 
 class TestSDXClientScheduling(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = create_client(scheduling=None)
+
+    def assert_invalid_scheduling(
+        self, invalid_value, expected_message, exception=ValueError
+    ):
+        with self.assertRaises(exception) as context:
+            self.client.scheduling = invalid_value
+        self.assertEqual(str(context.exception), expected_message)
+
     def test_valid_scheduling_both_times(self):
-        client_description = (
-            "This is an example to demonstrate a L2VPN with optional attributes."
-        )
-        client_notifications = [{"email": f"user{i+1}@email.com"} for i in range(10)]
         client_scheduling = {
             "start_time": "2024-07-04T10:00:00Z",
             "end_time": "2024-07-05T18:00:00Z",
         }
-        client = SDXClient(
-            base_url=TEST_URL,
-            name=TEST_NAME,
-            endpoints=TEST_ENDPOINTS,
-            description=client_description,
-            notifications=client_notifications,
-            scheduling=client_scheduling,
-        )
+        self.client.scheduling = client_scheduling
         self.assertEqual(
-            client.scheduling,
-            {"start_time": "2024-07-04T10:00:00Z", "end_time": "2024-07-05T18:00:00Z"},
+            self.client.scheduling, client_scheduling,
         )
 
     def test_valid_scheduling_end_time_only(self):
         client_scheduling = {"end_time": "2024-07-05T18:00:00Z"}
-        client = SDXClient(
-            base_url=TEST_URL,
-            name=TEST_NAME,
-            endpoints=TEST_ENDPOINTS,
-            scheduling=client_scheduling,
-        )
-        self.assertEqual(client.scheduling, {"end_time": "2024-07-05T18:00:00Z"})
+        self.client.scheduling = client_scheduling
+        self.assertEqual(self.client.scheduling, client_scheduling)
 
     def test_valid_scheduling_empty_dict(self):
-        client = SDXClient(
-            base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS, scheduling={},
-        )
-        self.assertEqual(client.scheduling, None)
+        self.client.scheduling = {}
+        self.assertEqual(self.client.scheduling, None)
 
     def test_invalid_scheduling_format(self):
-        with self.assertRaises(ValueError) as context:
-            SDXClient(
-                base_url=TEST_URL,
-                name=TEST_NAME,
-                endpoints=TEST_ENDPOINTS,
-                scheduling={"start_time": "invalid format"},
-            )
-        self.assertEqual(
-            str(context.exception),
-            "Invalid 'start_time' format. Use ISO8601 format (YYYY-MM-DDTHH:mm:SSZ).",
+        invalid_scheduling = {"start_time": "invalid format"}
+        self.assert_invalid_scheduling(
+            invalid_scheduling, ERROR_SCHEDULING_FORMAT,
         )
 
     def test_invalid_scheduling_end_before_start(self):
-        with self.assertRaises(ValueError) as context:
-            SDXClient(
-                base_url=TEST_URL,
-                name=TEST_NAME,
-                endpoints=TEST_ENDPOINTS,
-                scheduling={
-                    "start_time": "2024-07-05T18:00:00Z",
-                    "end_time": "2024-07-05T10:00:00Z",
-                },
-            )
-        self.assertEqual(str(context.exception), "End time must be after start time.")
+        invalid_scheduling = {
+            "start_time": "2024-07-05T18:00:00Z",
+            "end_time": "2024-07-05T10:00:00Z",
+        }
+        self.assert_invalid_scheduling(
+            invalid_scheduling, ERROR_SCHEDULING_END_BEFORE_START
+        )
 
     def test_invalid_scheduling_data_type(self):
-        with self.assertRaises(TypeError) as context:
-            SDXClient(
-                base_url=TEST_URL,
-                name=TEST_NAME,
-                endpoints=TEST_ENDPOINTS,
-                scheduling="not a dictionary",
-            )
-        self.assertEqual(
-            str(context.exception), "Scheduling attribute must be a dictionary."
+        invalid_scheduling = "not a dictionary"
+        self.assert_invalid_scheduling(
+            invalid_scheduling, ERROR_SCHEDULING_NOT_DICT, TypeError
         )
 
 

@@ -62,9 +62,31 @@ ERROR_DESCRIPTION_TOO_LONG = "Description attribute must be less than 256 charac
 # Notifications error messages
 ERROR_NOTIFICATIONS_NOT_LIST = "Notifications must be provided as a list."
 ERROR_NOTIFICATION_ITEM_NOT_DICT = "Each notification must be a dictionary."
-ERROR_NOTIFICATION_ITEM_EMAIL_KEY = "Each notification dictionary must contain a key 'email'."
-ERROR_NOTIFICATION_INVALID_EMAIL_FORMAT = "Invalid email address or email format: invalid_email"
-ERROR_NOTIFICATION_EXCEEDS_LIMIT = "Notifications can contain at most 10 email addresses."
+ERROR_NOTIFICATION_ITEM_EMAIL_KEY = (
+    "Each notification dictionary must contain a key 'email'."
+)
+ERROR_NOTIFICATION_INVALID_EMAIL_FORMAT = (
+    "Invalid email address or email format: invalid_email"
+)
+ERROR_NOTIFICATION_EXCEEDS_LIMIT = (
+    "Notifications can contain at most 10 email addresses."
+)
 
-def create_client(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS):
+# Scheduling error messages
+ERROR_SCHEDULING_FORMAT = (
+    "Invalid 'start_time' format. Use ISO8601 format (YYYY-MM-DDTHH:mm:SSZ)."
+)
+ERROR_SCHEDULING_END_BEFORE_START = "End time must be after start time."
+ERROR_SCHEDULING_NOT_DICT = "Scheduling attribute must be a dictionary."
+
+
+def create_client(
+    base_url=TEST_URL,
+    name=TEST_NAME,
+    endpoints=TEST_ENDPOINTS,
+    description=None,
+    notifications=None,
+    scheduling=None,
+    qos_metrics=None,
+):
     return SDXClient(base_url=TEST_URL, name=TEST_NAME, endpoints=TEST_ENDPOINTS)
