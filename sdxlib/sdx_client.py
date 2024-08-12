@@ -87,7 +87,7 @@ class SDXClient:
     @endpoints.setter
     def endpoints(self, value):
         """Setter for endpoint attribute."""
-        self.__endpoints = self._validate_endpoints(value) # if value else None
+        self.__endpoints = self._validate_endpoints(value)  # if value else None
 
     @property
     def description(self):

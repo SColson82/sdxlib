@@ -8,7 +8,7 @@ class TestSDXClient(unittest.TestCase):
         self.client = create_client()
 
     def assert_invalid_description(
-            self, invalid_value, expected_message, exception=ValueError
+        self, invalid_value, expected_message, exception=ValueError
     ):
         with self.assertRaises(exception) as context:
             self.client.description = invalid_value
@@ -34,9 +34,8 @@ class TestSDXClient(unittest.TestCase):
 
     def test_set_description_exceeding_limit(self):
         """Test setting description exceeding 255-character limit will raise ValueError"""
-        self.assert_invalid_description(
-            "x"*256, ERROR_DESCRIPTION_TOO_LONG
-        )
+        self.assert_invalid_description("x" * 256, ERROR_DESCRIPTION_TOO_LONG)
+
 
 # Run the tests
 if __name__ == "__main__":
