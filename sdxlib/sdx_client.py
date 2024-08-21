@@ -527,6 +527,9 @@ class SDXClient:
                 method_messages=method_messages,
                 message=error_message,
             )
+        except Timeout:
+            self._logger.error("Request timed out.")
+            raise SDXException("The request to create the L2VPN timed out.")
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
             raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
