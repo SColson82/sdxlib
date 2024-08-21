@@ -531,36 +531,59 @@ class SDXClient:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
             raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
 
-    def update_l2vpn(self, service_id, **kwargs):
-
+    def update_l2vpn(
+            self,
+            service_id: str,
+            state: Optional[str] = None,
+            name: Optional[str] = None,
+            endpoints: Optional[List[Dict[str, str]]] = None,
+            description: Optional[str] = None,
+            notifications: Optional[Dict[str, Union[str, bool]]] = None,
+            scheduling: Optional[Dict[str, str]] = None,
+            qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None
+    ) -> dict:
         """Updates an existing L2VPN using the provided service ID and keyword arguments.
 
         Args:
             service_id (str): The ID of the L2VPN service to update.
-            **kwargs: Arbitrary keyword arguments representing the attributes to be updated. 
-                      The 'state' attribute can only be changed to 'enabled' or 'disabled'.
+            state (Optional[str]): The new state of the L2VPN, can be 'enabled' or 'disabled'.
+            name (Optional[str]): The new name of the L2VPN.
+            endpoints (Optional[List[Dict[str, str]]]): The new list of endpoints.
+            description (Optional[str]): The new description of the L2VPN.
+            notifications (Optional[Dict[str, Union[str, bool]]]): The new notifications settings.
+            scheduling (Optional[Dict[str, str]]): The new scheduling information.
+            qos_metrics (Optional[Dict[str, Dict[str, Union[int, bool]]]]): The new QoS metrics.
 
         Returns:
             dict: Response from the SDX API.
 
         Raises:
             SDXException: If the API request fails.
+            ValueError: If any parameter is invalid.
         """
 
         url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
 
         payload = {"service_id": service_id}
 
-        for attribute, value in kwargs.items():
-            if attribute not in ["service_id", "state"]:
-                payload[attribute] = value
+        if state is not None:
+            if state.lower() in ["enabled", "disabled"]:
+                payload["state"] = state.lower()
             else:
-                if attribute == "state" and value.lower() in ("enabled", "disabled"):
-                    payload[attribute] = value.lower()
-                else:
-                    raise ValueError(
-                        "Invalid update: Cannot modify service_id. The 'state' attribute can only be changed to 'enabled' or 'disabled'."
-                    )
+                raise ValueError("Invalid state value. The 'state' attribute can only by changed to 'enabled' or 'disabled'.")
+            
+        attributes = {
+            "name": name,
+            "endpoints": endpoints,
+            "description": description,
+            "notifications": notifications,
+            "scheduling": scheduling,
+            "qos_metrics": qos_metrics
+        }
+
+        for attr, value in attributes.items():
+            if value is not None:
+                payload[attr] = value
 
         try:
             response = requests.patch(url, json=payload, verify=True, timeout=120)
