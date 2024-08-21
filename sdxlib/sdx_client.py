@@ -39,9 +39,9 @@ class SDXClient:
         name: Optional[str] = None,
         endpoints: Optional[List[Dict[str, str]]] = None,
         description: Optional[str] = None,
-        notifications: Optional[List[Dict[str, str]]]=None,
-        scheduling: Optional[Dict[str, str]]=None,
-        qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]]=None,
+        notifications: Optional[List[Dict[str, str]]] = None,
+        scheduling: Optional[Dict[str, str]] = None,
+        qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None,
     ) -> None:
         """Initializes an instance of SDXClient.
 
@@ -162,7 +162,9 @@ class SDXClient:
         self._qos_metrics = value
 
     # Endpoints Methods
-    def _validate_endpoints(self, endpoints: Optional[List[Dict[str, str]]]) -> List[Dict[str, str]]:
+    def _validate_endpoints(
+        self, endpoints: Optional[List[Dict[str, str]]]
+    ) -> List[Dict[str, str]]:
         """Validates the provided list of endpoints.
 
         Args:
@@ -309,7 +311,9 @@ class SDXClient:
         email_regex = r"^\S+@\S+$"
         return re.match(email_regex, email) is not None
 
-    def _validate_notifications(self, notifications: Optional[List[Dict[str, str]]]) -> Optional[List[Dict[str, str]]]:
+    def _validate_notifications(
+        self, notifications: Optional[List[Dict[str, str]]]
+    ) -> Optional[List[Dict[str, str]]]:
         """Validates the notifications attribute.
 
         Args:
@@ -357,7 +361,9 @@ class SDXClient:
         return re.match(timestamp_pattern, timestamp) is not None
 
     # Scheduling Methods
-    def _validate_scheduling(self, scheduling: Optional[Dict[str, str]]) -> Optional[Dict[str, str]]:
+    def _validate_scheduling(
+        self, scheduling: Optional[Dict[str, str]]
+    ) -> Optional[Dict[str, str]]:
         """Validates the provided scheduling configuration.
 
         Args:
@@ -393,7 +399,9 @@ class SDXClient:
         return scheduling
 
     # QOS Metrics Methods
-    def _validate_qos_metric(self, qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]]) -> None:
+    def _validate_qos_metric(
+        self, qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]]
+    ) -> None:
         """Validates the provided quality of service metrics.
 
         Args:
@@ -417,7 +425,9 @@ class SDXClient:
                 raise TypeError(f"QoS metric value for '{key}' must be a dictionary.")
             self._validate_qos_metric_value(key, value_dict)
 
-    def _validate_qos_metric_value(self, key: str, value_dict: Dict[str, Union[int, bool]]) -> None:
+    def _validate_qos_metric_value(
+        self, key: str, value_dict: Dict[str, Union[int, bool]]
+    ) -> None:
         """Validates the value dictionary for a specific QoS metric.
 
         Args:
@@ -472,6 +482,9 @@ class SDXClient:
                 "Creating L2VPN requires the base URL, name, and endpoints at minumum."
             )
         url = f"{self.base_url}/l2vpn/{self.VERSION}"
+
+        # Old url that we are currently working under
+        # url = f"{self.base_url}/SDX-Controller/1.0.0/connection"
 
         payload = {"name": self.name, "endpoints": self.endpoints}
 
@@ -535,15 +548,15 @@ class SDXClient:
             raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
 
     def update_l2vpn(
-            self,
-            service_id: str,
-            state: Optional[str] = None,
-            name: Optional[str] = None,
-            endpoints: Optional[List[Dict[str, str]]] = None,
-            description: Optional[str] = None,
-            notifications: Optional[Dict[str, Union[str, bool]]] = None,
-            scheduling: Optional[Dict[str, str]] = None,
-            qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None
+        self,
+        service_id: str,
+        state: Optional[str] = None,
+        name: Optional[str] = None,
+        endpoints: Optional[List[Dict[str, str]]] = None,
+        description: Optional[str] = None,
+        notifications: Optional[Dict[str, Union[str, bool]]] = None,
+        scheduling: Optional[Dict[str, str]] = None,
+        qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None,
     ) -> dict:
         """Updates an existing L2VPN using the provided service ID and keyword arguments.
 
@@ -573,15 +586,17 @@ class SDXClient:
             if state.lower() in ["enabled", "disabled"]:
                 payload["state"] = state.lower()
             else:
-                raise ValueError("Invalid state value. The 'state' attribute can only by changed to 'enabled' or 'disabled'.")
-            
+                raise ValueError(
+                    "Invalid state value. The 'state' attribute can only by changed to 'enabled' or 'disabled'."
+                )
+
         attributes = {
             "name": name,
             "endpoints": endpoints,
             "description": description,
             "notifications": notifications,
             "scheduling": scheduling,
-            "qos_metrics": qos_metrics
+            "qos_metrics": qos_metrics,
         }
 
         for attr, value in attributes.items():
@@ -633,8 +648,9 @@ class SDXClient:
         Raises:
             SDXException: If the API request fails.
         """
-
-        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+        # Old url that we are currently working under
+        url = f"{self.base_url}/SDX-Controller/1.0.0/connection/{service_id}"
+        # url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
 
         try:
             response = requests.get(url, verify=True, timeout=120)
@@ -678,10 +694,13 @@ class SDXClient:
             SDXException: If the API request fails with a known error code and description.
             ValueError: If an invalid parameters are provided.
         """
-        if archived:
-            url = f"{self.base_url}/l2vpn/{self.VERSION}/archived"
-        else:
-            url = f"{self.base_url}/l2vpn/{self.VERSION}/"
+        # Old url that we are currently working under
+        url = f"{self.base_url}/SDX-Controller/1.0.0/connections"
+        
+        # if archived:
+        #     url = f"{self.base_url}/l2vpn/{self.VERSION}/archived"
+        # else:
+        #     url = f"{self.base_url}/l2vpn/{self.VERSION}/"
 
         self._logger.info(f"Retrieving L2VPNs: URL={url}")
 
@@ -757,14 +776,18 @@ class SDXClient:
     # Utility Methods
     def __str__(self) -> str:
         """Returns a string description of the SDXClient instance."""
-        return (f"SDXClient(name={self.name}, endpoints={self.endpoints}, "
-                f"description={self.description}, notifications={self.notifications}, "
-                f"scheduling={self.scheduling}, qos_metrics={self.qos_metrics}, "
-                f"base url={self.base_url}")
+        return (
+            f"SDXClient(name={self.name}, endpoints={self.endpoints}, "
+            f"description={self.description}, notifications={self.notifications}, "
+            f"scheduling={self.scheduling}, qos_metrics={self.qos_metrics}, "
+            f"base url={self.base_url}"
+        )
 
     def __repr__(self) -> str:
         """Returns a string representation of the SDXClient instance."""
-        return (f"SDXClient(name={self.name}, endpoints={self.endpoints}, "
-                f"description={self.description}, notifications={self.notifications}, "
-                f"scheduling={self.scheduling}, qos_metrics={self.qos_metrics}, "
-                f"base url={self.base_url}")
+        return (
+            f"SDXClient(name={self.name}, endpoints={self.endpoints}, "
+            f"description={self.description}, notifications={self.notifications}, "
+            f"scheduling={self.scheduling}, qos_metrics={self.qos_metrics}, "
+            f"base url={self.base_url}"
+        )
