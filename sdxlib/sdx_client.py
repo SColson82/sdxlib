@@ -757,8 +757,14 @@ class SDXClient:
     # Utility Methods
     def __str__(self) -> str:
         """Returns a string description of the SDXClient instance."""
-        return f"SDXClient(name={self.name}, endpoints={self.endpoints})"
+        return (f"SDXClient(name={self.name}, endpoints={self.endpoints}, "
+                f"description={self.description}, notifications={self.notifications}, "
+                f"scheduling={self.scheduling}, qos_metrics={self.qos_metrics}, "
+                f"base url={self.base_url}")
 
     def __repr__(self) -> str:
         """Returns a string representation of the SDXClient instance."""
-        return f"SDXClient(base_url={self.base_url}, name={self.name}, endpoints={self.endpoints})"
+        return (f"SDXClient(name={self.name}, endpoints={self.endpoints}, "
+                f"description={self.description}, notifications={self.notifications}, "
+                f"scheduling={self.scheduling}, qos_metrics={self.qos_metrics}, "
+                f"base url={self.base_url}")
