@@ -605,33 +605,24 @@ class SDXClient:
             logging.error(f"Failed to retrieve L2VPN: {e}")
             raise SDXException(f"Failed to retrieve L2VPN: {e}")
 
-    def get_all_l2vpns(self, all=True, active_only=False):
+    def get_all_l2vpns(self, archived: bool = False) -> dict[str, dict]:
         """
-        Retrieves L2VPNs based on specified filters.
+        Retrieves all L2VPNs, either archived or active.
 
         Args:
-            all (bool, optional): If True, retrieves all L2VPNs (both active and archived). Defaults to True.
-            active_only (bool, optional): If True, retrieves only active L2VPNs. Defaults to False.
+            archived(bool): If True, retrieve only archived L2VPNs. If False, retrieve only active L2VPNS.
 
         Returns:
-            dict: A dictionary with L2VPN information (service_id as key) or an empty
-                dictionary if no L2VPNs are found.
+            dict: A dictionary with L2VPNs with service_ids as keys. If no L2VPNs, the dictionary will be empty.
 
         Raises:
             SDXException: If the API request fails with a known error code and description.
             ValueError: If an invalid parameters are provided.
         """
-        if all and active_only:
-            raise ValueError("Cannot specify both all and active_only.")
-
-        url = f"{self.base_url}/l2vpn/{self.VERSION}/"
-
-        if all:
-            url = url
-        elif not all and active_only:
-            url += "0"
+        if archived:
+            url = f"{self.base_url}/l2vpn/{self.VERSION}/archived"
         else:
-            url += "archived"
+            url = f"{self.base_url}/l2vpn/{self.VERSION}/"
 
         self._logger.info(f"Retrieving L2VPNs: URL={url}")
 
