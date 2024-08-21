@@ -66,7 +66,7 @@ class SDXClient:
     def base_url(self) -> str:
         """Getter for base_url attribute."""
         return self._base_url
-    
+
     @base_url.setter
     def base_url(self, value: str):
         """Setter for base_url attribute."""
@@ -139,7 +139,7 @@ class SDXClient:
         if value is None or not value:
             self._scheduling = None
             return
-        
+
         if not isinstance(value, dict):
             raise TypeError("Scheduling attribute must be a dictionary.")
 
@@ -162,14 +162,14 @@ class SDXClient:
         self._qos_metrics = value
 
     # Endpoints Methods
-    def _validate_endpoints(self, endpoints):
+    def _validate_endpoints(self, endpoints: Optional[List[Dict[str, str]]]) -> List[Dict[str, str]]:
         """Validates the provided list of endpoints.
 
         Args:
-            endpoints (list): List of endpoint dictionaries.
+            endpoints (Optional[List[Dict[str, str]]]): List of endpoint dictionaries.
 
         Returns:
-            list: Validated list of endpoint dictionaries.
+            List[Dict[str, str]]: Validated list of endpoint dictionaries.
 
         Raises:
             TypeError: If endpoints is not a list.
@@ -230,14 +230,14 @@ class SDXClient:
 
         return validated_endpoints
 
-    def _validate_endpoint_dict(self, endpoint_dict):
+    def _validate_endpoint_dict(self, endpoint_dict: Dict[str, str]) -> Dict[str, str]:
         """Validates a single endpoint dictionary.
 
         Args:
-            endpoint_dict (dict): Endpoint dictionary.
+            endpoint_dict (Dict[str, str]): Endpoint dictionary.
 
         Returns:
-            dict: Validated endpoint dictionary.
+            Dict[str, str]: Validated endpoint dictionary.
 
         Raises:
             TypeError: If endpoint_dict is not a dictionary.
@@ -295,7 +295,7 @@ class SDXClient:
 
     # Notifications Methods
     @staticmethod
-    def is_valid_email(email):
+    def is_valid_email(email: str) -> bool:
         """Validates an email address format.
 
         Args:
@@ -309,14 +309,14 @@ class SDXClient:
         email_regex = r"^\S+@\S+$"
         return re.match(email_regex, email) is not None
 
-    def _validate_notifications(self, notifications):
+    def _validate_notifications(self, notifications: Optional[List[Dict[str, str]]]) -> Optional[List[Dict[str, str]]]:
         """Validates the notifications attribute.
 
         Args:
-            notifications (list): List of dictionaries representing notifications.
+            notifications (Optional[List[Dict[str, str]]]): List of dictionaries representing notifications.
 
         Returns:
-            list: Validated list of notifications.
+            Optional[List[Dict[str, str]]]: Validated list of notifications.
 
         Raises:
             TypeError: If notifications is not a list.
@@ -344,17 +344,24 @@ class SDXClient:
             validated_notifications.append(notification)
         return validated_notifications
 
-    def _is_valid_iso8601(self, timestamp):
-        """Checks if the provided string is a valid ISO8601 formatted timestamp."""
+    def _is_valid_iso8601(self, timestamp: str) -> bool:
+        """Checks if the provided string is a valid ISO8601 formatted timestamp.
+
+        Args:
+            timestamp (str): The timestamp to validate.
+
+        Returns:
+            bool: True if the timestamp is valid, False otherwise.
+        """
         timestamp_pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$"
         return re.match(timestamp_pattern, timestamp) is not None
 
     # Scheduling Methods
-    def _validate_scheduling(self, scheduling):
+    def _validate_scheduling(self, scheduling: Optional[Dict[str, str]]) -> Optional[Dict[str, str]]:
         """Validates the provided scheduling configuration.
 
         Args:
-            scheduling (dict): Scheduling configuration.
+            scheduling (Optional[Dict[str, str]]): Scheduling configuration.
 
         Raises:
             TypeError: If scheduling is not a dictionary and value is not a string.
@@ -386,11 +393,11 @@ class SDXClient:
         return scheduling
 
     # QOS Metrics Methods
-    def _validate_qos_metric(self, qos_metrics):
+    def _validate_qos_metric(self, qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]]) -> None:
         """Validates the provided quality of service metrics.
 
         Args:
-            qos_metrics (dict): Quality of service metrics.
+            qos_metrics (Optional[Dict[str, Dict[str, Union[int, bool]]]]): Quality of service metrics.
 
         Raises:
             TypeError: If qos_metrics is not a dictionary and values are invalid types.
@@ -410,7 +417,17 @@ class SDXClient:
                 raise TypeError(f"QoS metric value for '{key}' must be a dictionary.")
             self._validate_qos_metric_value(key, value_dict)
 
-    def _validate_qos_metric_value(self, key, value_dict):
+    def _validate_qos_metric_value(self, key: str, value_dict: Dict[str, Union[int, bool]]) -> None:
+        """Validates the value dictionary for a specific QoS metric.
+
+        Args:
+            key (str): The key for the Qos Metric.
+            value_dict (Dict[str, Union[int, bool]]): The value dictionary for the QoS metric.
+
+        Raises:
+            ValueError: If the value for the metric is out of the expected range.
+            TypeError: If value or strict values are of incorrect type.
+        """
         if "value" not in value_dict:
             raise ValueError(f"Missing required key 'value' in QoS metric for '{key}'")
         if not isinstance(value_dict["value"], int):
@@ -437,7 +454,7 @@ class SDXClient:
         value_dict.get("strict", False)
 
     ### SDX Client Methods
-    _request_cache = {}
+    _request_cache: Dict[tuple, tuple] = {}
     _logger = logging.getLogger(__name__)
 
     def create_l2vpn(self) -> requests.Response:
@@ -454,8 +471,6 @@ class SDXClient:
             raise ValueError(
                 "Creating L2VPN requires the base URL, name, and endpoints at minumum."
             )
-        # if isinstance(self.endpoints, list) and len(self.endpoints) < 2:
-        #     raise ValueError("The 'endpoints' list cannot be empty.")
         url = f"{self.base_url}/l2vpn/{self.VERSION}"
 
         payload = {"name": self.name, "endpoints": self.endpoints}
@@ -577,7 +592,7 @@ class SDXClient:
             logging.error(f"Failed to update L2VPN: {e}")
             raise SDXException(f"Failed to update L2VPN: {e}")
 
-    def get_l2vpn(self, service_id):
+    def get_l2vpn(self, service_id: str) -> Dict:
         """Retrieves details of an existing L2VPN using the provided service ID.
 
         Args:
@@ -617,7 +632,7 @@ class SDXClient:
             logging.error(f"Failed to retrieve L2VPN: {e}")
             raise SDXException(f"Failed to retrieve L2VPN: {e}")
 
-    def get_all_l2vpns(self, archived: bool = False) -> dict[str, dict]:
+    def get_all_l2vpns(self, archived: bool = False) -> Dict[str, Dict]:
         """
         Retrieves all L2VPNs, either archived or active.
 
@@ -662,7 +677,7 @@ class SDXClient:
             logging.error(f"Failed to retrieve L2VPN(s): {e}")
             raise SDXException(f"Failed to retrieve L2VPN(s): {e}")
 
-    def delete_l2vpn(self, service_id):
+    def delete_l2vpn(self, service_id: str) -> Optional[Dict]:
         """Deletes an L2VPN using the provided L2VPN ID.
 
         Args:
@@ -702,10 +717,10 @@ class SDXClient:
             return SDXException("Failed to delete L2VPN", cause=e)
 
     # Utility Methods
-    def __str__(self):
+    def __str__(self) -> str:
         """Returns a string description of the SDXClient instance."""
         return f"SDXClient(name={self.name}, endpoints={self.endpoints})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Returns a string representation of the SDXClient instance."""
         return f"SDXClient(base_url={self.base_url}, name={self.name}, endpoints={self.endpoints})"
