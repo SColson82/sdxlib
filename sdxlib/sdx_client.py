@@ -2,7 +2,7 @@ from collections import namedtuple
 import logging
 import re
 import requests
-from typing import Optional, Dict
+from typing import Optional, List, Dict, Union
 from requests.exceptions import RequestException, HTTPError, Timeout
 
 from sdxlib.sdx_exception import SDXException
@@ -35,26 +35,25 @@ class SDXClient:
 
     def __init__(
         self,
-        base_url=None,
-        name=None,
-        endpoints=None,
-        description=None,
-        notifications=None,
-        scheduling=None,
-        qos_metrics=None,
-    ):
+        base_url: Optional[str] = None,
+        name: Optional[str] = None,
+        endpoints: Optional[List[Dict[str, str]]] = None,
+        description: Optional[str] = None,
+        notifications: Optional[List[Dict[str, str]]]=None,
+        scheduling: Optional[Dict[str, str]]=None,
+        qos_metrics: Optional[Dict[str, str]]=None,
+    ) -> None:
         """Initializes an instance of SDXClient.
 
         Args:
-        - base_url (str): The base URL of the SDX API.
-        - name (str): The name of the SDX client.
-        - endpoints (list): List of endpoints associated with the client.
-        - description (str, optional): Description of the client (default: None).
-        - notifications (list, optional): List of notification settings (default: None).
-        - scheduling (dict, optional): Scheduling configuration (default: None).
-        - qos_metrics (dict, optional): Quality of service metrics (default: None).
+        - base_url (Optional[str]): The base URL of the SDX API.
+        - name (Optional[str]): The name of the SDX client.
+        - endpoints (Optional[List[Dict[str, str]]]): List  of dictionaries with 'port_id' and 'vlan' keys for each endpoint.
+        - description (Optional[str]): Description of the client (default: None).
+        - notifications (Optional[List[Dict[str, str]]]): List of dictionaries, each with a single 'email' key (default: None).
+        - scheduling (Optional[Dict[str, str]]): Scheduling configuration (default: None).
+        - qos_metrics (Optional[Dict[str, str]]): Quality of service metrics (default: None).
         """
-        self._name = None
         self.base_url = base_url
         self.name = name
         self.endpoints = endpoints
