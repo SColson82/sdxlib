@@ -35,13 +35,13 @@ class SDXClient:
 
     def __init__(
         self,
-        base_url: Optional[str] = None,
+        base_url: str,
         name: Optional[str] = None,
         endpoints: Optional[List[Dict[str, str]]] = None,
         description: Optional[str] = None,
         notifications: Optional[List[Dict[str, str]]]=None,
         scheduling: Optional[Dict[str, str]]=None,
-        qos_metrics: Optional[Dict[str, str]]=None,
+        qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]]=None,
     ) -> None:
         """Initializes an instance of SDXClient.
 
@@ -54,21 +54,33 @@ class SDXClient:
         - scheduling (Optional[Dict[str, str]]): Scheduling configuration (default: None).
         - qos_metrics (Optional[Dict[str, str]]): Quality of service metrics (default: None).
         """
-        self.base_url = base_url
-        self.name = name
-        self.endpoints = endpoints
-        self.description = description
-        self.notifications = self._validate_notifications(notifications)
-        self.scheduling = scheduling
-        self.qos_metrics = qos_metrics
+        self._base_url = base_url
+        self._name = name
+        self._endpoints = endpoints
+        self._description = description
+        self._notifications = self._validate_notifications(notifications)
+        self._scheduling = scheduling
+        self._qos_metrics = qos_metrics
 
     @property
-    def name(self):
+    def base_url(self) -> str:
+        """Getter for base_url attribute."""
+        return self._base_url
+    
+    @base_url.setter
+    def base_url(self, value: str):
+        """Setter for base_url attribute."""
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Base URL must be a non-empty string.")
+        self._base_url = value
+
+    @property
+    def name(self) -> Optional[str]:
         """Getter for name attribute."""
         return self._name
 
     @name.setter
-    def name(self, value):
+    def name(self, value: Optional[str]):
         """Setter for name attribute."""
         if value is not None and (
             not isinstance(value, str) or not value.strip() or len(value) > 50
@@ -79,22 +91,22 @@ class SDXClient:
         self._name = value
 
     @property
-    def endpoints(self):
+    def endpoints(self) -> Optional[List[Dict[str, str]]]:
         """Getter for endpoint attribute."""
-        return self.__endpoints
+        return self._endpoints
 
     @endpoints.setter
-    def endpoints(self, value):
+    def endpoints(self, value: Optional[List[Dict[str, str]]]):
         """Setter for endpoint attribute."""
-        self.__endpoints = self._validate_endpoints(value) if value else None
+        self._endpoints = self._validate_endpoints(value) if value else None
 
     @property
-    def description(self):
+    def description(self) -> Optional[str]:
         """Getter for description attribute."""
         return self._description
 
     @description.setter
-    def description(self, value):
+    def description(self, value: Optional[str]):
         """Setter for description attribute."""
         if value is None or not value:
             self._description = None
@@ -104,12 +116,12 @@ class SDXClient:
             self._description = value
 
     @property
-    def notifications(self):
+    def notifications(self) -> Optional[List[Dict[str, str]]]:
         """Getter for notifications attribute."""
         return self._notifications
 
     @notifications.setter
-    def notifications(self, value):
+    def notifications(self, value: Optional[List[Dict[str, str]]]):
         """Setter for notifications attribute."""
         if value is None or not value:
             self._notifications = None
@@ -117,29 +129,30 @@ class SDXClient:
             self._notifications = self._validate_notifications(value)
 
     @property
-    def scheduling(self):
+    def scheduling(self) -> Optional[Dict[str, str]]:
         """Getter for scheduling attribute."""
         return self._scheduling
 
     @scheduling.setter
-    def scheduling(self, value):
+    def scheduling(self, value: Optional[Dict[str, str]]):
         """Setter for scheduling attribute."""
         if value is None or not value:
             self._scheduling = None
             return
-        if value is not None and not isinstance(value, dict):
+        
+        if not isinstance(value, dict):
             raise TypeError("Scheduling attribute must be a dictionary.")
 
         self._validate_scheduling(value)
         self._scheduling = value
 
     @property
-    def qos_metrics(self):
+    def qos_metrics(self) -> Optional[Dict[str, Dict[str, Union[int, bool]]]]:
         """Getter for qos_metrics attribute."""
         return self._qos_metrics
 
     @qos_metrics.setter
-    def qos_metrics(self, value: Optional[Dict[str, Dict[str, int]]]):
+    def qos_metrics(self, value: Optional[Dict[str, Dict[str, Union[int, bool]]]]):
         """Setter for qos_metrics attribute."""
         if value is None or not value:
             self._qos_metrics = None
