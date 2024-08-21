@@ -614,6 +614,9 @@ class SDXClient:
                 method_messages=method_messages,
                 message=error_message,
             )
+        except Timeout:
+            self._logger.error("Request timed out.")
+            raise SDXException("The request to create the L2VPN timed out.")
         except RequestException as e:
             logging.error(f"Failed to update L2VPN: {e}")
             raise SDXException(f"Failed to update L2VPN: {e}")
@@ -654,6 +657,9 @@ class SDXClient:
                 method_messages=method_messages,
                 message=error_message,
             )
+        except Timeout:
+            self._logger.error("Request timed out.")
+            raise SDXException("The request to create the L2VPN timed out.")
         except RequestException as e:
             logging.error(f"Failed to retrieve L2VPN: {e}")
             raise SDXException(f"Failed to retrieve L2VPN: {e}")
@@ -699,6 +705,9 @@ class SDXClient:
                 method_messages=method_messages,
                 message=error_message,
             )
+        except Timeout:
+            self._logger.error("Request timed out.")
+            raise SDXException("The request to create the L2VPN timed out.")
         except RequestException as e:
             logging.error(f"Failed to retrieve L2VPN(s): {e}")
             raise SDXException(f"Failed to retrieve L2VPN(s): {e}")
@@ -738,6 +747,9 @@ class SDXClient:
                 message=error_msg,
                 method_messages=method_messages,
             )
+        except Timeout:
+            self._logger.error("Request timed out.")
+            raise SDXException("The request to create the L2VPN timed out.")
         except RequestException as e:
             logging.error(f"Failed to delete L2VPN: {e}")
             return SDXException("Failed to delete L2VPN", cause=e)
