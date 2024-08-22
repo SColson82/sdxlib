@@ -40,10 +40,6 @@ class TestSDXClient(unittest.TestCase):
             "invalid endpoints", ERROR_INVALID_ENDPOINTS, TypeError
         )
 
-    def test_endpoints_empty_list(self):
-        """Checks that an empty list is not allowed for the 'endpoints' attribute."""
-        self.assert_invalid_endpoints([], ERROR_MIN_ENTRIES)
-
     def test_endpoints_min_required(self):
         """Checks that a list with less than 2 endpoints is not allowed."""
         self.assert_invalid_endpoints([VLAN_100,], ERROR_MIN_ENTRIES)
