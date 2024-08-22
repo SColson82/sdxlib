@@ -1,6 +1,6 @@
 from sdxlib.sdx_client import SDXClient
 
-TEST_URL = "http://example.com"
+TEST_URL = "http://aw-sdx-controller.renci.org:8081"
 TEST_NAME = "Test L2VPN"
 TEST_ENDPOINTS = [
     {
