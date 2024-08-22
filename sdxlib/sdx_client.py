@@ -35,13 +35,14 @@ class SDXClient:
 
     def __init__(
         self,
-        base_url: str,
+        base_url: Optional[str] = None,
         name: Optional[str] = None,
         endpoints: Optional[List[Dict[str, str]]] = None,
         description: Optional[str] = None,
         notifications: Optional[List[Dict[str, str]]] = None,
         scheduling: Optional[Dict[str, str]] = None,
         qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """Initializes an instance of SDXClient.
 
@@ -61,6 +62,8 @@ class SDXClient:
         self._notifications = self._validate_notifications(notifications)
         self._scheduling = scheduling
         self._qos_metrics = qos_metrics
+        self._logger = logger or logging.getLogger(__name__)
+        self._request_cache = {}
 
     @property
     def base_url(self) -> str:
@@ -374,7 +377,7 @@ class SDXClient:
             ValueError: If scheduling contains invalid keys or values.
         """
         if scheduling is None:
-            return
+            return None
 
         if not isinstance(scheduling, dict):
             raise TypeError("Scheduling must be a dictionary.")
@@ -464,10 +467,7 @@ class SDXClient:
         value_dict.get("strict", False)
 
     ### SDX Client Methods
-    _request_cache: Dict[tuple, tuple] = {}
-    _logger = logging.getLogger(__name__)
-
-    def create_l2vpn(self) -> requests.Response:
+    def create_l2vpn(self) -> dict:
         """Creates an L2VPN.
 
         Returns:
@@ -477,31 +477,35 @@ class SDXClient:
             SDXException: If the L2VPN creation fails.
             ValueError: If required attributes are missing.
         """
-        if not self.base_url or not self.name or not self.endpoints:
+        if not self._base_url or not self._name or not self._endpoints:
             raise ValueError(
                 "Creating L2VPN requires the base URL, name, and endpoints at minumum."
             )
+        if not isinstance(self._endpoints, list):
+            raise TypeError("Endpoints must be a list.")
         url = f"{self.base_url}/l2vpn/{self.VERSION}"
 
         # Old url that we are currently working under
         # url = f"{self.base_url}/SDX-Controller/1.0.0/connection"
 
-        payload = {"name": self.name, "endpoints": self.endpoints}
+        payload = {"name": self._name, "endpoints": self._endpoints}
 
         # Add optional attributes if provided.
-        if self.description:
-            payload["description"] = self.description
-        if self.notifications:
-            payload["notifications"] = self.notifications
-        if self.scheduling:
-            payload["scheduling"] = self.scheduling
-        if self.qos_metrics:
-            payload["qos_metrics"] = self.qos_metrics
+        if self._description:
+            payload["description"] = self._description
+        if self._notifications:
+            payload["notifications"] = self._notifications
+        if self._scheduling:
+            payload["scheduling"] = self._scheduling
+        if self._qos_metrics:
+            payload["qos_metrics"] = self._qos_metrics
+
+        self._logger.debug("Sending request to create L2VPN with payload: %s", payload)
 
         # Check cache for existing request with same name and endpoints
         cache_key = (
-            self.name,
-            tuple(endpoint["port_id"] for endpoint in self.endpoints),
+            self._name,
+            tuple(endpoint["port_id"] for endpoint in self._endpoints),
         )
         cached_data = self._request_cache.get(cache_key)
 
@@ -509,15 +513,15 @@ class SDXClient:
             _, response_json = cached_data
             return response_json
 
-        self._logger.info(f"L2VPN creation request sent to {url}.")
-
         try:
             response = requests.post(url, json=payload, timeout=120)
             response.raise_for_status()
             response_json = response.json()
-            cached_data = (payload, response)
+            cached_data = (payload, response_json)
             self._request_cache[cache_key] = cached_data
-            self._logger.info(f"L2VPN creation request sent to {url}.")
+            self._logger.info(
+                f"L2VPN created successfully with service_id: {response_json['service_id']}"
+            )
             return response_json
         except HTTPError as e:
             status_code = e.response.status_code
@@ -541,8 +545,8 @@ class SDXClient:
                 message=error_message,
             )
         except Timeout:
-            self._logger.error("Request timed out.")
-            raise SDXException("The request to create the L2VPN timed out.")
+            self._logger.error("The request to create the L2VPN timed out.")
+            raise SDXException(message="The request to create the L2VPN timed out.")
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
             raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
@@ -649,8 +653,8 @@ class SDXClient:
             SDXException: If the API request fails.
         """
         # Old url that we are currently working under
-        url = f"{self.base_url}/SDX-Controller/1.0.0/connection/{service_id}"
-        # url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+        # url = f"{self.base_url}/SDX-Controller/1.0.0/connection/{service_id}"
+        url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
 
         try:
             response = requests.get(url, verify=True, timeout=120)
@@ -695,12 +699,12 @@ class SDXClient:
             ValueError: If an invalid parameters are provided.
         """
         # Old url that we are currently working under
-        url = f"{self.base_url}/SDX-Controller/1.0.0/connections"
-        
-        # if archived:
-        #     url = f"{self.base_url}/l2vpn/{self.VERSION}/archived"
-        # else:
-        #     url = f"{self.base_url}/l2vpn/{self.VERSION}/"
+        # url = f"{self.base_url}/SDX-Controller/1.0.0/connections"
+
+        if archived:
+            url = f"{self.base_url}/l2vpn/{self.VERSION}/archived"
+        else:
+            url = f"{self.base_url}/l2vpn/{self.VERSION}/"
 
         self._logger.info(f"Retrieving L2VPNs: URL={url}")
 
