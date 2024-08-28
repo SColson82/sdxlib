@@ -34,28 +34,32 @@ response = client.create_l2vpn()
 print("L2VPN service created:", response)
 
 # Update an existing L2VPN service
-service_id = 'example-service-id'
-attribute = 'state'
-value = 'enabled'
-update_response = client.update_l2vpn(service_id, attribute, value)
+required_service_id = 'example-service-id'
+new_name = 'New Name'
+new_state = 'enabled'
+update_response = client.update_l2vpn(service_id=required_service_id, name=new_name, state=new_state)
 print("L2VPN service updated:", update_response)
 
 # Retrieve details of a specific L2VPN service
-get_response = client.get_l2vpn(service_id)
+get_response = client.get_l2vpn(service_id=required_service_id)
 print("Details of L2VPN service:", get_response)
 
-# List all L2VPN services
-all_l2vpns = client.get_all_l2vpns()
-print("All L2VPN services:", all_l2vpns)
+# List all active L2VPN services
+all_active_l2vpns = client.get_all_l2vpns()
+print("All L2VPN services:", all_active_l2vpns)
+
+# List all archived L2VPN services
+all_archived_l2vpns = client.get_all_l2vpns(archived=True)
+print("All L2VPN services:", all_archived_l2vpns)
 
 # Delete an existing L2VPN service
-delete_response = client.delete_l2vpn(service_id)
+delete_response = client.delete_l2vpn(service_id=required_service_id)
 print("L2VPN service deleted:", delete_response)
 ```
 
 ## Documentation
 
-For detailed API documentation and examples, refer to the [API Documentation]().
+For detailed API documentation and examples, refer to the [API Documentation](https://sdx-docs.readthedocs.io/en/latest/).
 
 ## Contributing
 
