@@ -609,7 +609,7 @@ class SDXClient:
 
         try:
             response = requests.patch(url, json=payload, verify=True, timeout=120)
-            response.raise_for_status()  # Raise exception for non-200 status codes
+            response.raise_for_status()
             self._logger.info(f"L2VPN update request sent to {url}.")
             return response.json()
         except HTTPError as e:
@@ -635,9 +635,9 @@ class SDXClient:
             )
         except Timeout:
             self._logger.error("Request timed out.")
-            raise SDXException("The request to create the L2VPN timed out.")
+            raise SDXException("The request to update the L2VPN timed out.")
         except RequestException as e:
-            logging.error(f"Failed to update L2VPN: {e}")
+            self._logger.error(f"Failed to update L2VPN: {e}")
             raise SDXException(f"Failed to update L2VPN: {e}")
 
     def get_l2vpn(self, service_id: str) -> Dict:
