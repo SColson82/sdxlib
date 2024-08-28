@@ -37,6 +37,8 @@ VLAN_UNTAGGED = {
     "vlan": "untagged",
 }
 
+TEST_SERVICE_ID = "8344657b-2466-4735-9a21-143643073865"
+
 # Name error message.
 ERROR_NAME_INVALID = "Name must be a non-empty string with maximum 50 characters."
 
