@@ -1,0 +1,13 @@
+- In scheduling, start_time and end_time should both be after whatever time it is right now. 
+- Unit tests for SDXExceptions edge cases.
+- Read over sdx_client and see if any support functions can be removed to another file. 
+- Finish the README.
+- Is this on MIT license?
+- Configure logger with a specific format and potentially output to files or other logging services.
+- Extract attribute validation to separate modules and methods. 
+- There's some repetition in the methods dealing with API requests. Consider creating a helper method to handle common request logic (e.g., setting up headers, handling responses, caching).
+- Look in to `mypy` to ensure type safety across codebase.
+- Ensure logging is consistent and at appropriate levels (info, debug, error). This will help in monitoring and debugging when running client in production.
+- Create a class for the API return object. 
+- Create additional notebooks to fully explore all of the attributes and addtional error handling. 
+- In the scheduling setter, the TypeError bothers me. It looks like it is unreachable and I can't figure out how to fix that. 
