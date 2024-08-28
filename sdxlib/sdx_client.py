@@ -732,7 +732,7 @@ class SDXClient:
             self._logger.error("Request timed out.")
             raise SDXException("The request to create the L2VPN timed out.")
         except RequestException as e:
-            logging.error(f"Failed to retrieve L2VPN(s): {e}")
+            self._logger.error(f"Failed to retrieve L2VPN(s): {e}")
             raise SDXException(f"Failed to retrieve L2VPN(s): {e}")
 
     def delete_l2vpn(self, service_id: str) -> Optional[Dict]:
@@ -755,27 +755,32 @@ class SDXClient:
             self._logger.info(f"L2VPN deletion request sent to {url}.")
             return response.json() if response.content else None
         except HTTPError as e:
-            status_code = e.response.status_code
-            error_msg = response.json().get("description", "Unknown error")
-            method_messages = {
-                201: "L2VPN Deleted",
-                401: "Not Authorized",
-                404: "L2VPN Service ID provided does not exist",
-            }
-            self._logger.error(
-                f"Failed to delete L2VPN. Status code: {status_code}: {error_msg}"
-            )
+            if e.response is not None:
+                try:
+                    error_msg = e.response.json().get("description", "Unknown error")
+                except ValueError:
+                    error_msg = "Error response is not a valid JSON"
+                self._logger.error(
+                    f"Failed to delete L2VPN. Status code: {e.response.status_code}: {error_msg}"
+                )
+            else:
+                error_msg = "Unknown error occurred"
+                self._logger.error(f"Failed to delete L2VPN. {error_msg}")
             raise SDXException(
-                status_code=status_code,
+                status_code=e.response.status_code if e.response else 500,
                 message=error_msg,
-                method_messages=method_messages,
+                method_messages={
+                    201: "L2VPN Deleted",
+                    401: "Not Authorized",
+                    404: "L2VPN Service ID provided does not exist",
+                },
             )
         except Timeout:
             self._logger.error("Request timed out.")
-            raise SDXException("The request to create the L2VPN timed out.")
+            raise SDXException("The request to delete the L2VPN timed out.")
         except RequestException as e:
-            logging.error(f"Failed to delete L2VPN: {e}")
-            return SDXException("Failed to delete L2VPN", cause=e)
+            self._logger.error(f"Failed to delete L2VPN: {e}")
+            raise SDXException(f"Failed to delete L2VPN: {e}")
 
     # Utility Methods
     def __str__(self) -> str:
