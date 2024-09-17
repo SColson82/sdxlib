@@ -6,6 +6,7 @@ from typing import Optional, List, Dict, Union
 from requests.exceptions import RequestException, HTTPError, Timeout
 
 from sdxlib.sdx_exception import SDXException
+from sdxlib.sdx_response import SDXResponse
 
 """sdxlib
 
@@ -467,11 +468,11 @@ class SDXClient:
         value_dict.get("strict", False)
 
     ### SDX Client Methods
-    def create_l2vpn(self) -> dict:
+    def create_l2vpn(self) -> SDXResponse:
         """Creates an L2VPN.
 
         Returns:
-            requests.Response: Response object from the SDX API.
+            SDXResponse: Parsed response object from the SDX API.
 
         Raises:
             SDXException: If the L2VPN creation fails.
@@ -511,7 +512,7 @@ class SDXClient:
 
         if cached_data:
             _, response_json = cached_data
-            return response_json
+            return SDXResponse(response_json)
 
         try:
             response = requests.post(url, json=payload, timeout=120)
@@ -522,7 +523,7 @@ class SDXClient:
             self._logger.info(
                 f"L2VPN created successfully with service_id: {response_json['service_id']}"
             )
-            return response_json
+            return SDXResponse(response_json)
         except HTTPError as e:
             status_code = e.response.status_code
             method_messages = {
@@ -561,7 +562,7 @@ class SDXClient:
         notifications: Optional[Dict[str, Union[str, bool]]] = None,
         scheduling: Optional[Dict[str, str]] = None,
         qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None,
-    ) -> dict:
+    ) -> None:
         """Updates an existing L2VPN using the provided service ID and keyword arguments.
 
         Args:
@@ -610,8 +611,13 @@ class SDXClient:
         try:
             response = requests.patch(url, json=payload, verify=True, timeout=120)
             response.raise_for_status()
-            self._logger.info(f"L2VPN update request sent to {url}.")
-            return response.json()
+            self._logger.info(f"L2VPN update request sent to {url}, with payload: {payload}.")
+            # return response.json()
+
+            # No response body on success, so return a success message
+            if response.status_code == 201:
+                self._logger.info(f"L2VPN with service_id {service_id} was successfully updated.")
+
         except HTTPError as e:
             status_code = e.response.status_code
             method_messages = {
@@ -684,7 +690,7 @@ class SDXClient:
             logging.error(f"Failed to retrieve L2VPN: {e}")
             raise SDXException(f"Failed to retrieve L2VPN: {e}")
 
-    def get_all_l2vpns(self, archived: bool = False) -> Dict[str, Dict]:
+    def get_all_l2vpns(self, archived: bool = False) -> Dict[str, SDXResponse]:
         """
         Retrieves all L2VPNs, either archived or active.
 
@@ -711,9 +717,20 @@ class SDXClient:
         try:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
+
+            l2vpns_json = response.json()
             self._logger.info(f"L2VPN retrieval request sent to {url}.")
-            self._logger.info(f"Retrieved L2VPNs successfully: {response.json()}")
-            return response.json()
+            self._logger.info(f"Retrieved L2VPNs successfully: {l2vpns_json}")
+
+            # Map each L2VPN in the response JSON to an SDXResponse object
+            l2vpns = {
+                service_id: SDXResponse(l2vpn_data)
+                for service_id, l2vpn_data in l2vpns_json.items()
+            }
+
+            return l2vpns
+
+            # return response.json()
         except HTTPError as e:
             status_code = e.response.status_code
             method_messages = {

@@ -11,3 +11,7 @@
 - Create a class for the API return object. 
 - Create additional notebooks to fully explore all of the attributes and addtional error handling. 
 - In the scheduling setter, the TypeError bothers me. It looks like it is unreachable and I can't figure out how to fix that. 
+
+
+
+Does the response body contain the original client attributes as described on page 17 of Provisioning API and Data Model Spec? These attributes are not specified in the Create method spec. 

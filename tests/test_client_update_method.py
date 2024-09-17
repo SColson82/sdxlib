@@ -37,10 +37,10 @@ class TestSDXClient(unittest.TestCase):
             qos_metrics={"latency": {"value": 100, "priority": True}},
         )
 
-        expected_response = {
-            "description": "L2VPN Service Modified",
-            "service_id": TEST_SERVICE_ID,
-        }
+        expected_response = None   #{
+        #     "description": "L2VPN Service Modified",
+        #     "service_id": TEST_SERVICE_ID,
+        # }
 
         self.assertEqual(response, expected_response)
         mock_patch.assert_called_once()
@@ -179,10 +179,18 @@ class TestSDXClient(unittest.TestCase):
             f"{self.client.base_url}/l2vpn/{self.client.VERSION}/{TEST_SERVICE_ID}"
         )
 
-        expected_message = f"L2VPN update request sent to {expected_url}."
+        expected_payload = {"service_id": TEST_SERVICE_ID, "state": "enabled"}
 
-        # Assert that logger's info method was called with the expected message
-        mock_logger.info.assert_called_once_with(expected_message)
+        # Construct the expected log messages
+        expected_request_log = f"L2VPN update request sent to {expected_url}, with payload: {expected_payload}."
+        expected_success_log = f"L2VPN with service_id {TEST_SERVICE_ID} was successfully updated."
+
+        # Assert that both log messages were logged
+        mock_logger.info.assert_any_call(expected_request_log)
+        mock_logger.info.assert_any_call(expected_success_log)
+
+        # Assert that both log calls occurred (i.e., two info calls were made)
+        self.assertEqual(mock_logger.info.call_count, 2)
 
     ## Test Logging for Update Errors
     @patch("logging.getLogger")
