@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 class SDXResponse:
     """
@@ -28,6 +28,11 @@ class SDXResponse:
             raise TypeError("Expected a dictionary response_json.")
         
         self.service_id: str = response_json.get("service_id")
+        self.name: str = response_json.get("name")
+        self.endpoints: List[Dict[str, str]] = response_json.get("endpoints")
+        self.description: Optional[str] = response_json.get("description")
+        self.notifications: Optional[List[Dict[str, str]]] = response_json.get("notifications")
+        self.qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = response_json.get("qos_metrics")
         self.ownership: str = response_json.get("ownership")
         self.creation_date: str = response_json.get("creation_date")
         self.archived_date: str = response_json.get("archived_date")
