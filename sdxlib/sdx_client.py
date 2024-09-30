@@ -551,6 +551,79 @@ class SDXClient:
         except RequestException as e:
             self._logger.error(f"An error occurred while creating L2VPN: {e}")
             raise SDXException(message=f"An error occurred while creating L2VPN: {e}")
+## Potential update to the update_l2vpn method, needs to be evaluated against the spec
+
+    # def update_l2vpn(self, service_id: str, state: Optional[str] = None, name: Optional[str] = None,
+    #                  endpoints: Optional[List[Dict[str, str]]] = None, description: Optional[str] = None,
+    #                  notifications: Optional[List[Dict[str, str]]] = None,
+    #                  scheduling: Optional[Dict[str, str]] = None,
+    #                  qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None) -> Dict:
+    #     """
+    #     Updates an existing L2VPN with new parameters.
+
+    #     Args:
+    #         service_id (str): The ID of the L2VPN to update.
+    #         state (Optional[str]): The new state of the L2VPN.
+    #         name (Optional[str]): The updated name for the L2VPN.
+    #         endpoints (Optional[List[Dict[str, str]]]): The updated endpoints for the L2VPN.
+    #         description (Optional[str]): The updated description of the L2VPN.
+    #         notifications (Optional[List[Dict[str, str]]]): The updated notifications configuration.
+    #         scheduling (Optional[Dict[str, str]]): The updated scheduling parameters.
+    #         qos_metrics (Optional[Dict[str, Dict[str, Union[int, bool]]]]): The updated QoS metrics.
+
+    #     Returns:
+    #         dict: Response from the SDX API after updating the L2VPN.
+
+    #     Raises:
+    #         SDXException: If the API request fails.
+    #     """
+    #     # Retrieve the existing L2VPN details first
+    #     current_l2vpn = self.get_l2vpn(service_id)
+        
+    #     # Create a payload with only the updated fields
+    #     payload = {}
+        
+    #     if state and state != current_l2vpn.state:
+    #         payload['state'] = state
+    #     if name and name != current_l2vpn.name:
+    #         payload['name'] = name
+    #     if endpoints and endpoints != current_l2vpn.endpoints:
+    #         payload['endpoints'] = endpoints
+    #     if description and description != current_l2vpn.description:
+    #         payload['description'] = description
+    #     if notifications and notifications != current_l2vpn.notifications:
+    #         payload['notifications'] = notifications
+    #     if scheduling and scheduling != current_l2vpn.scheduling:
+    #         payload['scheduling'] = scheduling
+    #     if qos_metrics and qos_metrics != current_l2vpn.qos_metrics:
+    #         payload['qos_metrics'] = qos_metrics
+
+    #     # Check if there's anything to update
+    #     if not payload:
+    #         self._logger.info(f"No changes detected for L2VPN with service_id: {service_id}.")
+    #         return {"description": "No changes made", "service_id": service_id}
+
+    #     # Send the update request
+    #     url = f"{self.base_url}/l2vpn/{self.VERSION}/{service_id}"
+    #     try:
+    #         response = requests.patch(url, json=payload, verify=True, timeout=120)
+    #         response.raise_for_status()
+    #         self._logger.info(f"L2VPN update request sent to {url}. Payload: {payload}")
+    #         return response.json()
+
+    #     except HTTPError as e:
+    #         status_code = e.response.status_code
+    #         error_message = f"Failed to update L2VPN with service_id {service_id}. Status code: {status_code}"
+    #         self._logger.error(error_message)
+    #         raise SDXException(status_code=status_code, message=error_message)
+
+    #     except Timeout:
+    #         self._logger.error(f"Update request for L2VPN with service_id {service_id} timed out.")
+    #         raise SDXException(f"Update request for L2VPN with service_id {service_id} timed out.")
+
+    #     except RequestException as e:
+    #         self._logger.error(f"Failed to update L2VPN with service_id {service_id}: {e}")
+    #         raise SDXException(f"Failed to update L2VPN with service_id {service_id}: {e}")
 
     def update_l2vpn(
         self,
