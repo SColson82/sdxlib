@@ -562,7 +562,7 @@ class SDXClient:
         notifications: Optional[Dict[str, Union[str, bool]]] = None,
         scheduling: Optional[Dict[str, str]] = None,
         qos_metrics: Optional[Dict[str, Dict[str, Union[int, bool]]]] = None,
-    ) -> None:
+    ) -> SDXResponse:
         """Updates an existing L2VPN using the provided service ID and keyword arguments.
 
         Args:
@@ -576,7 +576,7 @@ class SDXClient:
             qos_metrics (Optional[Dict[str, Dict[str, Union[int, bool]]]]): The new QoS metrics.
 
         Returns:
-            dict: Response from the SDX API.
+            SDXResponse: Parsed response object from the SDX API.
 
         Raises:
             SDXException: If the API request fails.
@@ -646,14 +646,14 @@ class SDXClient:
             self._logger.error(f"Failed to update L2VPN: {e}")
             raise SDXException(f"Failed to update L2VPN: {e}")
 
-    def get_l2vpn(self, service_id: str) -> Dict:
+    def get_l2vpn(self, service_id: str) -> SDXResponse:
         """Retrieves details of an existing L2VPN using the provided service ID.
 
         Args:
             service_id (str): The ID of the L2VPN to retrieve.
 
         Returns:
-            dict: Response from the SDX API.
+            SDXResponse: Parsed response from the SDX API.
 
         Raises:
             SDXException: If the API request fails.
@@ -665,8 +665,31 @@ class SDXClient:
         try:
             response = requests.get(url, verify=True, timeout=120)
             response.raise_for_status()
+            response_json = response.json()
             self._logger.info(f"L2VPN retrieval request sent to {url}.")
-            return response.json()
+            
+            # Populate the SDXResponse object with attributes from the response
+            sdx_response = SDXResponse(
+                service_id=response_json.get("service_id"),
+                name=response_json.get("name"),
+                endpoints=response_json.get("endpoints"),
+                description=response_json.get("description"),
+                notifications=response_json.get("notifications"),
+                qos_metrics=response_json.get("qos_metrics"),
+                ownership=response_json.get("ownership"),
+                creation_date=response_json.get("creation_date"),
+                archived_date=response_json.get("archived_date"),
+                status=response_json.get("status"),
+                state=response_json.get("state"),
+                counters_location=response_json.get("counters_location"),
+                last_modified=response_json.get("last_modified"),
+                current_path=response_json.get("current_path"),
+                oxp_service_ids=response_json.get("oxp_service_ids")
+            )
+        
+            return sdx_response            
+            
+            # return response.json()
         except HTTPError as e:
             status_code = e.response.status_code
             method_messages = {
