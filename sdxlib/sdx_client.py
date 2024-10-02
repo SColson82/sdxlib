@@ -680,6 +680,8 @@ class SDXClient:
         for attr, value in attributes.items():
             if value is not None:
                 payload[attr] = value
+    
+        self._logger.debug(f"Sending request to update L2VPN with payload: {payload}")
 
         try:
             response = requests.patch(url, json=payload, verify=True, timeout=120)
@@ -690,6 +692,7 @@ class SDXClient:
             # No response body on success, so return a success message
             if response.status_code == 201:
                 self._logger.info(f"L2VPN with service_id {service_id} was successfully updated.")
+                return SDXResponse({"description": "L2VPN Service Modified", "service_id": service_id})
 
         except HTTPError as e:
             status_code = e.response.status_code
@@ -742,23 +745,26 @@ class SDXClient:
             self._logger.info(f"L2VPN retrieval request sent to {url}.")
             
             # Populate the SDXResponse object with attributes from the response
-            sdx_response = SDXResponse(
-                service_id=response_json.get("service_id"),
-                name=response_json.get("name"),
-                endpoints=response_json.get("endpoints"),
-                description=response_json.get("description"),
-                notifications=response_json.get("notifications"),
-                qos_metrics=response_json.get("qos_metrics"),
-                ownership=response_json.get("ownership"),
-                creation_date=response_json.get("creation_date"),
-                archived_date=response_json.get("archived_date"),
-                status=response_json.get("status"),
-                state=response_json.get("state"),
-                counters_location=response_json.get("counters_location"),
-                last_modified=response_json.get("last_modified"),
-                current_path=response_json.get("current_path"),
-                oxp_service_ids=response_json.get("oxp_service_ids")
-            )
+            # sdx_response = SDXResponse(
+            #     service_id=response_json.get("service_id"),
+            #     name=response_json.get("name"),
+            #     endpoints=response_json.get("endpoints"),
+            #     description=response_json.get("description"),
+            #     notifications=response_json.get("notifications"),
+            #     qos_metrics=response_json.get("qos_metrics"),
+            #     ownership=response_json.get("ownership"),
+            #     creation_date=response_json.get("creation_date"),
+            #     archived_date=response_json.get("archived_date"),
+            #     status=response_json.get("status"),
+            #     state=response_json.get("state"),
+            #     counters_location=response_json.get("counters_location"),
+            #     last_modified=response_json.get("last_modified"),
+            #     current_path=response_json.get("current_path"),
+            #     oxp_service_ids=response_json.get("oxp_service_ids")
+            # )
+
+            # Directly pass all key-value pairs from response_json to SDXResponse
+            sdx_response = SDXResponse(response_json)
         
             return sdx_response            
             
